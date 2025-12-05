@@ -1,5 +1,6 @@
 <?php
 include 'db_connect.php';
+<<<<<<< Updated upstream
 
 // --- 1. 處理讀取舊資料 (編輯模式) ---
 $editData = null;
@@ -7,6 +8,41 @@ if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
     $editData = $result->fetch_assoc();
+=======
+// --- 1. 處理讀取舊資料 (編輯模式) ---
+$editData = null; // 初始化變數
+if (isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    // 撈出要編輯的那一筆資料
+    $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
+    $editData = $result->fetch_assoc();
+}
+
+// --- 2. 處理表單送出 (新增 或 修改) ---
+if (isset($_POST['save'])) {
+    $name = $_POST['storeName'];
+    $addr = $_POST['address'];
+    $phone = $_POST['Phone'];
+    $time = $_POST['worktime'];
+    
+    // 檢查是否有隱藏的 storeID，有就是修改，沒有就是新增
+    if (!empty($_POST['storeID'])) {
+        // [修改操作] SQL Update
+        $id = $_POST['storeID'];
+        $sql = "UPDATE STORE SET storeName='$name', address='$addr', Phone='$phone', worktime='$time' WHERE storeID=$id";
+    } else {
+        // [新增操作] SQL Insert
+        $sql = "INSERT INTO STORE (storeName, address, Phone, worktime) VALUES ('$name', '$addr', '$phone', '$time')";
+    }
+
+    // 執行 SQL
+    if ($conn->query($sql)) {
+        header("Location: store_mngt.php"); // 成功後重新導向清空表單
+        exit;
+    } else {
+        echo "Error: " . $conn->error;
+    }
+>>>>>>> Stashed changes
 }
 
 // --- 2. 處理資料儲存 (新增 或 修改) ---
