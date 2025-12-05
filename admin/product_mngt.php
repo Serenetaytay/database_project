@@ -1,95 +1,168 @@
 <?php
 include 'db_connect.php';
 
-// --- 新增商品邏輯 (含圖片) ---
-if (isset($_POST['add'])) {
+// --- 1. 編輯模式：讀取舊資料 ---
+$editData = null;
+if (isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    $result = $conn->query("SELECT * FROM PRODUCT WHERE pID = $id");
+    $editData = $result->fetch_assoc();
+}
+
+// --- 2. 處理資料儲存 (新增 或 修改) ---
+if (isset($_POST['save'])) {
     $pName = $_POST['pName'];
     $storeID = $_POST['storeID'];
     $stock = $_POST['stock'];
-    $imagePath = ''; // 預設空圖片
+    
+    // 預設圖片路徑 (如果是新增=空; 如果是修改=舊路徑)
+    $imagePath = $_POST['old_image'] ?? '';
 
-    // 1. 處理圖片上傳
+    // --- 圖片上傳邏輯 ---
     if (isset($_FILES['pImage']) && $_FILES['pImage']['error'] === 0) {
-        $uploadDir = 'uploads/'; // 共用之前的 uploads 資料夾
-        
-        // 確保資料夾存在
+        $uploadDir = 'uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-
-        // 檔名加上時間戳記防止重複
         $fileName = time() . '_' . basename($_FILES['pImage']['name']);
         $targetFile = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['pImage']['tmp_name'], $targetFile)) {
-            $imagePath = $targetFile;
+            $imagePath = $targetFile; // 若上傳成功，更新路徑
         }
     }
 
-    // 2. 寫入資料庫 (加入 pImage)
-    $sql = "INSERT INTO PRODUCT (pName, storeID, stock, pImage) 
-            VALUES ('$pName', '$storeID', '$stock', '$imagePath')";
+    // --- 判斷是新增還是修改 ---
+    if (!empty($_POST['pID'])) {
+        // [修改 Update]
+        $id = $_POST['pID'];
+        $sql = "UPDATE PRODUCT SET pName='$pName', storeID='$storeID', stock='$stock', pImage='$imagePath' WHERE pID=$id";
+        $msg = "修改成功！";
+    } else {
+        // [新增 Insert]
+        $sql = "INSERT INTO PRODUCT (pName, storeID, stock, pImage) 
+                VALUES ('$pName', '$storeID', '$stock', '$imagePath')";
+        $msg = "新增成功！";
+    }
     
-    if($conn->query($sql)){
-        header("Location: product_mngt.php");
-        exit(); // 記得加 exit
+    if ($conn->query($sql)) {
+        // 使用 javascript alert 提示後跳轉，體驗較好
+        echo "<script>alert('$msg'); window.location.href='product_mngt.php';</script>";
+        exit();
     } else {
         echo "Error: " . $conn->error;
     }
 }
 
-// --- 刪除商品邏輯 ---
+// --- 3. 處理刪除 ---
 if (isset($_GET['del'])) {
     $conn->query("DELETE FROM PRODUCT WHERE pID={$_GET['del']}");
     header("Location: product_mngt.php");
     exit();
 }
+
+// --- 4. 處理搜尋邏輯 ---
+$searchKeyword = '';
+// 預設 SQL：查詢所有商品並 JOIN 商店名稱
+$sql_query = "SELECT P.*, S.storeName 
+              FROM PRODUCT P 
+              JOIN STORE S ON P.storeID = S.storeID";
+
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $searchKeyword = $_GET['search'];
+    // 搜尋條件：商品名稱 或 分店名稱
+    $sql_query .= " WHERE P.pName LIKE '%$searchKeyword%' OR S.storeName LIKE '%$searchKeyword%'";
+}
+
+$sql_query .= " ORDER BY P.pID DESC"; // 讓新資料排在前面
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
-    <div class="container">
-        <h3>  商品管理 (Product)</h3>
+    <div class="container mt-4">
+        <h3>商品管理 (Product)</h3>
         
-        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm">
+        <form method="get" class="row mb-4 align-items-center">
+            <div class="col-auto">
+                <label class="col-form-label fw-bold">🔍 搜尋：</label>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="search" class="form-control" placeholder="商品名稱或分店..." 
+                       value="<?php echo htmlspecialchars($searchKeyword); ?>">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">查詢</button>
+                <?php if(!empty($searchKeyword)): ?>
+                    <a href="product_mngt.php" class="btn btn-outline-secondary">清除</a>
+                <?php endif; ?>
+            </div>
+        </form>
+
+        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-success-subtle">
+            <h5 class="text-success mb-3"><?php echo $editData ? '✏️ 編輯商品資料' : '➕ 新增商品'; ?></h5>
+            
+            <input type="hidden" name="pID" value="<?php echo $editData['pID'] ?? ''; ?>">
+            <input type="hidden" name="old_image" value="<?php echo $editData['pImage'] ?? ''; ?>">
+
             <div class="col-md-3">
                 <label class="form-label small text-muted">所屬分店</label>
                 <select name="storeID" class="form-select" required>
                     <option value="">選擇分店...</option>
                     <?php
+                    // 撈出所有分店供選擇
                     $res = $conn->query("SELECT * FROM STORE");
-                    while($r=$res->fetch_assoc()) echo "<option value='{$r['storeID']}'>{$r['storeName']}</option>";
+                    while ($r = $res->fetch_assoc()) {
+                        // ★關鍵：如果是編輯模式，且ID對上了，就加上 selected
+                        $selected = ($editData && $r['storeID'] == $editData['storeID']) ? 'selected' : '';
+                        echo "<option value='{$r['storeID']}' $selected>{$r['storeName']}</option>";
+                    }
                     ?>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label small text-muted">商品名稱</label>
-                <input type="text" name="pName" class="form-control" placeholder="商品名稱" required>
+                <input type="text" name="pName" class="form-control" placeholder="商品名稱" required
+                       value="<?php echo $editData['pName'] ?? ''; ?>">
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted">庫存數量</label>
-                <input type="number" name="stock" class="form-control" placeholder="庫存" required>
+                <input type="number" name="stock" class="form-control" placeholder="庫存" required
+                       value="<?php echo $editData['stock'] ?? ''; ?>">
             </div>
             
             <div class="col-md-4">
-                <label class="form-label small text-muted">商品照片</label>
+                <label class="form-label small text-muted">商品照片 (若不修改請留空)</label>
                 <input type="file" name="pImage" class="form-control" accept="image/*">
+                <?php if ($editData && !empty($editData['pImage'])): ?>
+                    <div class="mt-2 text-muted small">
+                        目前圖片：<br>
+                        <img src="<?php echo $editData['pImage']; ?>" style="height: 60px; border-radius: 5px; border: 1px solid #ddd;">
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="col-12">
-                <button type="submit" name="add" class="btn btn-success w-100">新增商品</button>
+                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-warning' : 'btn-success'; ?> w-100">
+                    <?php echo $editData ? '確認修改' : '新增商品'; ?>
+                </button>
+                <?php if($editData): ?>
+                    <a href="product_mngt.php" class="btn btn-secondary w-100 mt-2">取消修改</a>
+                <?php endif; ?>
             </div>
         </form>
 
         <table class="table table-hover bg-white shadow-sm align-middle">
             <thead class="table-success">
                 <tr>
-                    <th>圖片</th> <th>品名</th>
+                    <th>ID</th>
+                    <th>圖片</th> 
+                    <th>品名</th>
                     <th>分店</th>
                     <th>庫存</th>
                     <th>操作</th>
@@ -97,22 +170,39 @@ if (isset($_GET['del'])) {
             </thead>
             <tbody>
                 <?php
-                $sql = "SELECT P.*, S.storeName FROM PRODUCT P JOIN STORE S ON P.storeID = S.storeID";
-                $res = $conn->query($sql);
-                while ($row = $res->fetch_assoc()) {
-                    // 圖片顯示邏輯
-                    $imgHtml = "無圖片";
-                    if (!empty($row['pImage'])) {
-                        $imgHtml = "<img src='{$row['pImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px;'>";
-                    }
+                // 執行搜尋 SQL
+                $res = $conn->query($sql_query);
+                
+                if ($res->num_rows > 0) {
+                    while ($row = $res->fetch_assoc()) {
+                        // 圖片顯示邏輯
+                        $imgHtml = "<span class='text-muted small'>無圖片</span>";
+                        if (!empty($row['pImage'])) {
+                            $imgHtml = "<img src='{$row['pImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
+                        }
 
-                    echo "<tr>
-                            <td>{$imgHtml}</td>
-                            <td>{$row['pName']}</td>
-                            <td>{$row['storeName']}</td>
-                            <td>{$row['stock']}</td>
-                            <td><a href='?del={$row['pID']}' class='btn btn-sm btn-outline-danger' onclick='return confirm(\"確定刪除？\")'>刪除</a></td>
-                          </tr>";
+                        // 搜尋關鍵字高亮 (UX 優化)
+                        $showPName = $row['pName'];
+                        $showStore = $row['storeName'];
+                        if (!empty($searchKeyword)) {
+                            $showPName = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showPName);
+                            $showStore = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showStore);
+                        }
+
+                        echo "<tr>
+                                <td>{$row['pID']}</td>
+                                <td>{$imgHtml}</td>
+                                <td>{$showPName}</td>
+                                <td>{$showStore}</td>
+                                <td>{$row['stock']}</td>
+                                <td>
+                                    <a href='?edit={$row['pID']}' class='btn btn-sm btn-warning mb-1'>編輯</a>
+                                    <a href='?del={$row['pID']}' class='btn btn-sm btn-outline-danger mb-1' onclick='return confirm(\"確定刪除？\")'>刪除</a>
+                                </td>
+                              </tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='6' class='text-center p-4 text-muted'>查無資料</td></tr>";
                 }
                 ?>
             </tbody>
