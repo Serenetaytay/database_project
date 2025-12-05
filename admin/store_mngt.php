@@ -1,14 +1,5 @@
 <?php
 include 'db_connect.php';
-<<<<<<< Updated upstream
-
-// --- 1. 處理讀取舊資料 (編輯模式) ---
-$editData = null;
-if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
-    $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
-    $editData = $result->fetch_assoc();
-=======
 // --- 1. 處理讀取舊資料 (編輯模式) ---
 $editData = null; // 初始化變數
 if (isset($_GET['edit'])) {
@@ -42,7 +33,6 @@ if (isset($_POST['save'])) {
     } else {
         echo "Error: " . $conn->error;
     }
->>>>>>> Stashed changes
 }
 
 // --- 2. 處理資料儲存 (新增 或 修改) ---
