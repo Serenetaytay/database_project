@@ -1,0 +1,64 @@
+
+body {
+margin: 0;
+padding: 0;
+background: #f2f4f7;
+font-family: 'Segoe UI', sans-serif;
+}
+
+
+.header {
+width: 100%;
+padding: 26px 40px;
+background: #fff;
+border-bottom: 1px solid #ddd;
+font-size: 30px;
+font-weight: 900;
+}
+.brand-title { display:flex; align-items:center; }
+.brand-circle {
+width: 14px; height: 14px; border-radius: 50%; background:#111; margin-right:10px;
+}
+
+
+.container { width: 92%; margin: 0 auto; }
+
+
+.nav-bar { display:flex; gap:12px; margin: 25px 0; }
+.nav-item {
+padding: 10px 20px;
+background: #fff;
+border: 1px solid #ccc;
+border-radius: 6px;
+font-weight: 600;
+text-decoration: none;
+color: #333;
+transition: 0.2s;
+}
+.nav-item:hover { background:#efefef; }
+.nav-item.active { background:#111; color:white; border-color:#111; }
+
+
+.content-grid {
+display: grid;
+grid-template-columns: 400px 350px;
+gap: 50px;
+margin-top: 20px;
+}
+
+
+.form-row { display:flex; flex-direction:column; margin-bottom:22px; }
+.form-row label { font-weight:700; margin-bottom:6px; }
+.form-row input {
+padding: 12px;
+border-radius: 8px;
+border: 1px solid #ccc;
+}
+
+
+.btn-black {
+padding: 12px 30px;
+background: #111;
+border: none;
+text-decoration-color: #ddd;
+}
