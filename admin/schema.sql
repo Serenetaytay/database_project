@@ -2,39 +2,110 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-
---  建立 PRODUCT (商品)
-DROP TABLE IF EXISTS `PRODUCT`;
-CREATE TABLE `PRODUCT` (
-  `pID` int(11) NOT NULL AUTO_INCREMENT,
-  `pName` varchar(100) NOT NULL,
-  `storeID` int(11) NOT NULL,
-  `stock` int(11) DEFAULT 0,
-  PRIMARY KEY (`pID`),
-  KEY `storeID` (`storeID`),
-  CONSTRAINT `product_ibfk_1` FOREIGN KEY (`storeID`) REFERENCES `STORE` (`storeID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 假資料 PRODUCT
-INSERT INTO `PRODUCT` (`pName`, `storeID`, `stock`) VALUES
-('皇家飼料 K36', 1, 50),
-('貓抓板', 1, 20),
-('狗狗潔牙骨', 2, 100);
-
-
---  建立 STORE (商店)
+-- 1. 建立 STORE (商店)
 DROP TABLE IF EXISTS `STORE`;
-CREATE TABLE `STORE` (
-  `storeID` int(11) NOT NULL AUTO_INCREMENT,
-  `storeName` varchar(50) NOT NULL,
-  `address` varchar(100) DEFAULT NULL,
-  `Phone` varchar(20) DEFAULT NULL,
-  `worktime` varchar(50) DEFAULT NULL,
+CREATE TABLE STORE (
+  storeID int(11) NOT NULL AUTO_INCREMENT,
+  storeName varchar(50) NOT NULL,
+  address varchar(100) DEFAULT NULL,
+  Phone varchar(20) DEFAULT NULL,
+  worktime varchar(50) DEFAULT NULL,
   PRIMARY KEY (`storeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 假資料 STORE
-INSERT INTO `STORE` (`storeName`, `address`, `Phone`, `worktime`) VALUES
+INSERT INTO STORE (`storeName`, `address`, `Phone`, `worktime`) VALUES
 ('台北信義店', '台北市信義區松壽路1號', '02-12345678', '09:00-22:00'),
 ('台中逢甲店', '台中市西屯區逢甲路10號', '04-23456789', '10:00-23:00'),
 ('高雄巨蛋店', '高雄市左營區博愛二路', '07-34567890', '11:00-21:00');
+
+-- 2. 建立 SPECIE (物種)
+DROP TABLE IF EXISTS `SPECIE`;
+CREATE TABLE SPECIE (
+  sID int(11) NOT NULL AUTO_INCREMENT,
+  sName varchar(50) NOT NULL,
+  PRIMARY KEY (`sID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 假資料 SPECIE
+INSERT INTO SPECIE (`sName`) VALUES ('狗'), ('貓'), ('兔子');
+
+-- 3. 建立 BREED (品種)
+DROP TABLE IF EXISTS `BREED`;
+CREATE TABLE BREED (
+  bID int(11) NOT NULL AUTO_INCREMENT,
+  sID int(11) NOT NULL,
+  bName varchar(50) NOT NULL,
+  PRIMARY KEY (`bID`),
+  KEY sID (`sID`),
+  CONSTRAINT breed_ibfk_1 FOREIGN KEY (`sID`) REFERENCES SPECIE (`sID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 假資料 BREED
+INSERT INTO BREED (`sID`, `bName`) VALUES
+(1, '黃金獵犬'), (1, '柴犬'), (1, '柯基'),
+(2, '美國短毛貓'), (2, '曼赤肯'),
+(3, '獅子兔');
+
+-- 4. 建立 PET (寵物)
+DROP TABLE IF EXISTS `PET`;
+CREATE TABLE PET (
+  petID int(11) NOT NULL AUTO_INCREMENT,
+  bID int(11) NOT NULL,
+  storeID int(11) NOT NULL,
+  birth date DEFAULT NULL,
+  sex enum('公','母') DEFAULT '公',
+  personality varchar(255) DEFAULT NULL,
+  status varchar(20) DEFAULT '在店',
+  petprice int(11) DEFAULT 0,
+  PRIMARY KEY (`petID`),
+  KEY bID (`bID`),
+  KEY storeID (`storeID`),
+  CONSTRAINT pet_ibfk_1 FOREIGN KEY (`bID`) REFERENCES BREED (`bID`),
+  CONSTRAINT pet_ibfk_2 FOREIGN KEY (`storeID`) REFERENCES STORE (`storeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 假資料 PET
+INSERT INTO PET (`bID`, `storeID`, `birth`, `sex`, `personality`, `status`, `petprice`) VALUES
+(1, 1, '2023-01-01', '公', '活潑好動，親人', '在店', 25000),
+(2, 1, '2023-02-15', '母', '有點害羞，愛吃', '在店', 18000),
+(4, 2, '2023-03-10', '公', '黏人，會呼嚕', '已預約', 12000),
+(5, 3, '2023-04-05', '母', '腿短可愛', '在店', 30000);
+
+-- 5. 建立 PRODUCT (商品)
+DROP TABLE IF EXISTS `PRODUCT`;
+CREATE TABLE PRODUCT (
+  pID int(11) NOT NULL AUTO_INCREMENT,
+  pName varchar(100) NOT NULL,
+  storeID int(11) NOT NULL,
+  stock int(11) DEFAULT 0,
+  PRIMARY KEY (`pID`),
+  KEY storeID (`storeID`),
+  CONSTRAINT product_ibfk_1 FOREIGN KEY (`storeID`) REFERENCES STORE (`storeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 假資料 PRODUCT
+INSERT INTO PRODUCT (`pName`, `storeID`, `stock`) VALUES
+('皇家飼料 K36', 1, 50),
+('貓抓板', 1, 20),
+('狗狗潔牙骨', 2, 100);
+
+-- 6. 建立 RESERVE (預約)
+DROP TABLE IF EXISTS `RESERVE`;
+CREATE TABLE RESERVE (
+  rID int(11) NOT NULL AUTO_INCREMENT,
+  petID int(11) NOT NULL,
+  rName varchar(50) NOT NULL,
+  rPhone varchar(20) NOT NULL,
+  time datetime NOT NULL,
+  status varchar(20) DEFAULT '待確認',
+  PRIMARY KEY (`rID`),
+  KEY petID (`petID`),
+  CONSTRAINT reserve_ibfk_1 FOREIGN KEY (`petID`) REFERENCES PET (`petID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 假資料 RESERVE
+INSERT INTO RESERVE (`petID`, `rName`, `rPhone`, `time`, `status`) VALUES
+(3, '王小明', '0912345678', '2023-12-25 14:00:00', '已確認');
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -48,7 +48,7 @@ if (isset($_GET['confirm'])) {
 </head>
 <body class="container mt-5">
     <a href="index.php" class="btn btn-secondary mb-3">回首頁</a>
-    <h2 class="mb-4">3. 預約管理 (Reserve)</h2>
+    <h2 class="mb-4">預約管理 (Reserve)</h2>
 
     <form method="post" class="card p-4 mb-4 bg-light">
         <h5 class="card-title">新增預約</h5>
