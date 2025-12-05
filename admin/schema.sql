@@ -109,3 +109,20 @@ INSERT INTO RESERVE (`petID`, `rName`, `rPhone`, `time`, `status`) VALUES
 (3, '王小明', '0912345678', '2023-12-25 14:00:00', '已確認');
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+--添加照片的部分
+這跟之前的商店 (Store) 和商品 (Product) 做法完全一樣！我們需要修改資料庫欄位，然後更新程式碼。
+
+請依照以下兩個步驟操作：
+
+第一步：修改資料庫 (新增欄位)
+請到 phpMyAdmin，點選你的資料庫 (petshop_db)，點選 SQL 分頁，執行這行指令：
+
+SQL
+
+ALTER TABLE PET ADD COLUMN petImage VARCHAR(255) DEFAULT NULL;
+
+ALTER TABLE PRODUCT ADD COLUMN pImage VARCHAR(255) DEFAULT NULL;
+
+ALTER TABLE STORE ADD COLUMN storeImage VARCHAR(255) DEFAULT NULL;
