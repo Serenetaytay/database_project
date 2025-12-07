@@ -7,12 +7,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 
 include 'db_connect.php';
-
-// ==========================================
-//  A. 快速新增小功能 (物種 & 品種)
-// ==========================================
-
-// 1. 新增物種
+// 新增物種
 if (isset($_POST['add_specie'])) {
     $sName = $_POST['sName'];
     if (!empty($sName)) {
@@ -37,7 +32,7 @@ if (isset($_GET['del_specie'])) {
     }
 }
 
-// 2. 新增品種
+// 新增品種
 if (isset($_POST['add_breed'])) {
     $sID = $_POST['sID'];
     $bName = $_POST['bName'];
@@ -60,12 +55,7 @@ if (isset($_GET['del_breed'])) {
         echo "<script>alert('刪除失敗！\\n可能原因：還有寵物屬於此品種，請先刪除寵物或修改其品種。'); window.location.href='pet_mngt.php';</script>";
     }
 }
-
-// ==========================================
-//  B. 寵物管理核心邏輯
-// ==========================================
-
-// 1. 編輯模式
+// 編輯模式
 $editData = null;
 $showCollapse = ""; 
 if (isset($_GET['edit'])) {
@@ -78,7 +68,7 @@ if (isset($_GET['edit'])) {
     $showCollapse = "show"; 
 }
 
-// 2. 儲存寵物資料
+// 儲存寵物資料
 if (isset($_POST['save_pet'])) {
     $manualID = $_POST['petID']; 
     $originalID = $_POST['original_petID'];
@@ -124,8 +114,19 @@ if (isset($_POST['save_pet'])) {
         }
         
         if ($stmt->execute()) {
-            echo "<script>alert('$msg'); window.location.href='pet_mngt.php';</script>";
-            exit();
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',       // 圖示：success, error, warning, info
+                        title: '成功',
+                        text: '$msg',          // PHP 的變數訊息
+                        timer: 2000,           // 2秒後自動關閉
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href='pet_mngt.php'; // 彈窗關閉後跳轉
+                    });
+                });
+            </script>";
         } else {
             throw new Exception($stmt->error);
         }
@@ -140,7 +141,7 @@ if (isset($_POST['save_pet'])) {
     }
 }
 
-// 3. 刪除
+// 刪除
 if (isset($_GET['del'])) {
     $id = $_GET['del'];
     $conn->query("DELETE FROM PET WHERE petID=$id");
@@ -148,9 +149,6 @@ if (isset($_GET['del'])) {
     exit();
 }
 
-// ==========================================
-//  C. 搜尋 SQL
-// ==========================================
 $sql_query = "SELECT PET.*, BREED.bName, STORE.storeName, SPECIE.sName 
               FROM PET 
               LEFT JOIN BREED ON PET.bID = BREED.bID 
@@ -184,12 +182,12 @@ $sql_query .= " ORDER BY PET.petID ASC";
     <title>寵物管理系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .manage-list {
             max-height: 200px;
             overflow-y: auto;
         }
-        /* 自定義黑色按鈕 */
         .btn-dark-custom {
             background-color: #212529;
             color: white;
@@ -202,6 +200,26 @@ $sql_query .= " ORDER BY PET.petID ASC";
         }
     </style>
 </head>
+<script>
+function confirmDelete(url) {
+    event.preventDefault(); 
+    
+    Swal.fire({
+        title: '確定要刪除嗎？',
+        text: "刪除後將無法復原這筆資料！",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: '是的，刪除！',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    })
+}
+</script>
 <body class="bg-light">
     
     <?php include 'navbar.php'; ?>
@@ -285,9 +303,15 @@ $sql_query .= " ORDER BY PET.petID ASC";
                                 $all_s = $conn->query("SELECT * FROM SPECIE");
                                 while ($row = $all_s->fetch_assoc()) {
                                     echo "<tr>
-                                            <td>{$row['sName']}</td>
-                                            <td class='text-end'><a href='?del_specie={$row['sID']}' class='text-danger text-decoration-none' onclick='return confirm(\"確定刪除此物種？\")'>[刪除]</a></td>
-                                          </tr>";
+                                    <td>{$row['sName']}</td>
+                                    <td class='text-end'>
+                                        <a href='?del_specie={$row['sID']}' 
+                                           onclick='confirmDelete(this.href); return false;' 
+                                           class='btn btn-danger btn-sm'>
+                                           <i class='fas fa-trash'></i>
+                                        </a>
+                                    </td>
+                                    </tr>";
                                 }
                                 ?>
                             </table>
@@ -325,7 +349,11 @@ $sql_query .= " ORDER BY PET.petID ASC";
                                     echo "<tr>
                                             <td><span class='badge bg-secondary'>{$row['sName']}</span></td>
                                             <td>{$row['bName']}</td>
-                                            <td class='text-end'><a href='?del_breed={$row['bID']}' class='text-danger text-decoration-none' onclick='return confirm(\"確定刪除此品種？\")'>[刪除]</a></td>
+                                            <td class='text-end'>
+                                                <a href='?del_breed={$row['bID']}' 
+                                                   class='text-danger text-decoration-none' 
+                                                   onclick='confirmDelete(this.href); return false;'>[刪除]</a>
+                                            </td>
                                           </tr>";
                                 }
                                 ?>
@@ -456,15 +484,8 @@ $sql_query .= " ORDER BY PET.petID ASC";
                 <?php
                 $result = $conn->query($sql_query);
                 
-                // 1. 定義商店顏色輪播清單
                 $colorMap = [
-                    'text-primary',   // 藍色
-                    'text-success',   // 綠色
-                    'text-danger',    // 紅色
-                    'text-info',      // 淺藍
-                    'text-dark',      // 黑色
-                    'text-secondary', // 灰色
-                    'text-warning'    // 黃色
+                    'text-primary', 'text-success', 'text-danger', 'text-info', 'text-dark', 'text-secondary', 'text-warning'
                 ];
                 $colorCount = count($colorMap); 
 
@@ -477,30 +498,26 @@ $sql_query .= " ORDER BY PET.petID ASC";
 
                         $visualID = $row['storeID'] . "-" . str_pad($row['petID'], 3, '0', STR_PAD_LEFT);
 
-                        // 搜尋高亮
                         $showBreed = $row['bName'];
                         $showStore = $row['storeName'];
-                        $showPers = $row['personality']; // 個性欄位內容
+                        $showPers = $row['personality']; 
                         if (!empty($searchKeyword)) {
                             $showBreed = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showBreed);
                             $showStore = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showStore);
                             $showPers = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showPers);
                         }
 
-                        // 2. 商店ID顏色判斷
                         $colorIndex = $row['storeID'] % $colorCount;
                         $idColorClass = $colorMap[$colorIndex];
 
-                        // 3. 物種顏色判斷
                         $sName = $row['sName'];
                         $speciesBadgeClass = 'bg-dark';
                         if ($sName == '貓') {
-                            $speciesBadgeClass = 'bg-secondary'; // 貓灰色
+                            $speciesBadgeClass = 'bg-secondary';
                         } elseif ($sName == '狗') {
-                            $speciesBadgeClass = 'bg-primary';   // 狗藍色
+                            $speciesBadgeClass = 'bg-primary';
                         }
 
-                        // 4. 狀態顏色判斷
                         $status = $row['status'];
                         $statusBadgeClass = 'bg-info text-dark';
                         if ($status == '已預約') {
@@ -509,18 +526,23 @@ $sql_query .= " ORDER BY PET.petID ASC";
                             $statusBadgeClass = 'bg-danger';
                         }
 
-                        // ★ 修改後的表格列 (加入了個性、性別、調整順序)
                         echo "<tr>
                                 <td class='fw-bold {$idColorClass}'>{$visualID}</td> 
                                 <td>{$imgHtml}</td>
                                 <td><span class='badge {$speciesBadgeClass}'>{$sName}</span></td>
                                 <td>{$showBreed}</td>
-                                <td><small class='text-muted'>{$showPers}</small></td> <td>{$row['sex']}</td> <td><span class='badge {$statusBadgeClass}'>{$status}</span></td>
+                                <td><small class='text-muted'>{$showPers}</small></td> 
+                                <td>{$row['sex']}</td> 
+                                <td><span class='badge {$statusBadgeClass}'>{$status}</span></td>
                                 <td>{$showStore}</td>
                                 <td class='text-success fw-bold'>$ {$row['petprice']}</td>
                                 <td>
                                     <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
-                                    <a href='?del={$row['petID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除？\")'><i class='fas fa-trash'></i></a>
+                                    <a href='?del={$row['petID']}' 
+                                       class='btn btn-danger btn-sm mb-1' 
+                                       onclick='confirmDelete(this.href); return false;'>
+                                       <i class='fas fa-trash'></i>
+                                    </a>
                                 </td>
                               </tr>";
                     }
