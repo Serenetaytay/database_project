@@ -1,6 +1,11 @@
 <?php
 include 'db_connect.php';
-// 新增物種
+
+// ==========================================
+//  A. 快速新增小功能 (物種 & 品種)
+// ==========================================
+
+// 1. 新增物種
 if (isset($_POST['add_specie'])) {
     $sName = $_POST['sName'];
     if (!empty($sName)) {
@@ -13,18 +18,19 @@ if (isset($_POST['add_specie'])) {
         }
     }
 }
+
+// 刪除物種
 if (isset($_GET['del_specie'])) {
-    $id = intval($_GET['del_specie']); // 轉成整數防注入
+    $id = intval($_GET['del_specie']);
     $sql = "DELETE FROM SPECIE WHERE sID = $id";
     if ($conn->query($sql)) {
         echo "<script>alert('物種刪除成功！'); window.location.href='pet_mngt.php';</script>";
     } else {
-        // 捕捉 Foreign Key 錯誤 (例如還有品種屬於這個物種)
         echo "<script>alert('刪除失敗！\\n可能原因：該物種下還有品種資料，請先清空品種。'); window.location.href='pet_mngt.php';</script>";
     }
 }
 
-// 新增品種
+// 2. 新增品種
 if (isset($_POST['add_breed'])) {
     $sID = $_POST['sID'];
     $bName = $_POST['bName'];
@@ -36,20 +42,25 @@ if (isset($_POST['add_breed'])) {
         }
     }
 }
+
+// 刪除品種
 if (isset($_GET['del_breed'])) {
     $id = intval($_GET['del_breed']);
     $sql = "DELETE FROM BREED WHERE bID = $id";
     if ($conn->query($sql)) {
         echo "<script>alert('品種刪除成功！'); window.location.href='pet_mngt.php';</script>";
     } else {
-        // 捕捉 Foreign Key 錯誤 (例如還有寵物是這個品種)
         echo "<script>alert('刪除失敗！\\n可能原因：還有寵物屬於此品種，請先刪除寵物或修改其品種。'); window.location.href='pet_mngt.php';</script>";
     }
 }
 
-// 編輯模式：讀取舊資料
+// ==========================================
+//  B. 寵物管理核心邏輯
+// ==========================================
+
+// 1. 編輯模式
 $editData = null;
-$showCollapse = "";
+$showCollapse = ""; 
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $stmt = $conn->prepare("SELECT * FROM PET WHERE petID = ?");
@@ -57,64 +68,72 @@ if (isset($_GET['edit'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $editData = $result->fetch_assoc();
-    $showCollapse = "show";
+    $showCollapse = "show"; 
 }
 
-// 儲存寵物資料 (新增 或 修改)
+// 2. 儲存寵物資料
 if (isset($_POST['save_pet'])) {
+    $manualID = $_POST['petID']; 
+    $originalID = $_POST['original_petID'];
+
     $bID = $_POST['bID'];
     $storeID = $_POST['storeID'];
     $birth = $_POST['birth'];
     $sex = $_POST['sex'];
     $personality = $_POST['personality'];
     $petprice = $_POST['petprice'];
-    $status = $_POST['status'] ?? '在店'; // 預設狀態
-    
-    // 圖片路徑處理：預設為舊路徑 (修改時) 或 空字串 (新增時)
+    $status = $_POST['status'] ?? '在店';
     $imagePath = $_POST['old_image'] ?? '';
 
-    // --- 圖片上傳邏輯 ---
     if (isset($_FILES['petImage']) && $_FILES['petImage']['error'] === 0) {
         $uploadDir = 'uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        
-        // 檔名加上時間戳記，防止檔名重複覆蓋
+        if (!is_dir($uploadDir)) { mkdir($uploadDir, 0777, true); }
         $ext = pathinfo($_FILES['petImage']['name'], PATHINFO_EXTENSION);
         $fileName = time() . '_' . uniqid() . '.' . $ext;
         $targetFile = $uploadDir . $fileName;
-
         if (move_uploaded_file($_FILES['petImage']['tmp_name'], $targetFile)) {
-            $imagePath = $targetFile; // 更新為新圖片路徑
+            $imagePath = $targetFile;
         }
     }
 
-    // --- 判斷是 Update 還是 Insert ---
-    if (!empty($_POST['petID'])) {
-        // [修改 Update]
-        $id = $_POST['petID'];
-        $sql = "UPDATE PET SET bID=?, storeID=?, birth=?, sex=?, personality=?, status=?, petprice=?, petImage=? WHERE petID=?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iissssssi", $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath, $id);
-        $msg = "寵物資料修改成功！";
-    } else {
-        // [新增 Insert]
-        $sql = "INSERT INTO PET (bID, storeID, birth, sex, personality, status, petprice, petImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iissssss", $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath);
-        $msg = "寵物新增成功！";
-    }
-    
-    if ($stmt->execute()) {
-        echo "<script>alert('$msg'); window.location.href='pet_mngt.php';</script>";
+    try {
+        if (!empty($originalID)) {
+            // Update
+            $sql = "UPDATE PET SET petID=?, bID=?, storeID=?, birth=?, sex=?, personality=?, status=?, petprice=?, petImage=? WHERE petID=?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iiissssssi", $manualID, $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath, $originalID);
+            $msg = "修改成功！ID 已更新為 $manualID";
+        } else {
+            // Insert (先檢查 ID 是否重複)
+            $check = $conn->query("SELECT petID FROM PET WHERE petID = $manualID");
+            if ($check->num_rows > 0) {
+                throw new Exception("Duplicate entry '{$manualID}' for key 'PRIMARY'");
+            }
+
+            $sql = "INSERT INTO PET (petID, bID, storeID, birth, sex, personality, status, petprice, petImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iiissssss", $manualID, $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath);
+            $msg = "新增成功！指定 ID: $manualID";
+        }
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('$msg'); window.location.href='pet_mngt.php';</script>";
+            exit();
+        } else {
+            throw new Exception($stmt->error);
+        }
+
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+            echo "<script>alert('錯誤：ID {$manualID} 已經存在！請使用其他號碼。'); window.history.back();</script>";
+        } else {
+            echo "<script>alert('資料庫錯誤：" . addslashes($e->getMessage()) . "'); window.history.back();</script>";
+        }
         exit();
-    } else {
-        echo "Error: " . $conn->error;
     }
 }
 
-// 3. 刪除寵物
+// 3. 刪除
 if (isset($_GET['del'])) {
     $id = $_GET['del'];
     $conn->query("DELETE FROM PET WHERE petID=$id");
@@ -122,6 +141,9 @@ if (isset($_GET['del'])) {
     exit();
 }
 
+// ==========================================
+//  C. 搜尋 SQL
+// ==========================================
 $sql_query = "SELECT PET.*, BREED.bName, STORE.storeName, SPECIE.sName 
               FROM PET 
               LEFT JOIN BREED ON PET.bID = BREED.bID 
@@ -129,33 +151,23 @@ $sql_query = "SELECT PET.*, BREED.bName, STORE.storeName, SPECIE.sName
               LEFT JOIN STORE ON PET.storeID = STORE.storeID 
               WHERE 1=1";
 
-// 接收參數
 $filter_sID = $_GET['filter_sID'] ?? '';
 $filter_bID = $_GET['filter_bID'] ?? '';
 $filter_min = $_GET['filter_min'] ?? '';
 $filter_max = $_GET['filter_max'] ?? '';
 $searchKeyword = $_GET['search'] ?? '';
 
-// 動態加入條件
-if (!empty($filter_sID)) {
-    $sql_query .= " AND SPECIE.sID = '$filter_sID'";
-}
-if (!empty($filter_bID)) {
-    $sql_query .= " AND BREED.bID = '$filter_bID'";
-}
-if (!empty($filter_min)) {
-    $sql_query .= " AND PET.petprice >= $filter_min";
-}
-if (!empty($filter_max)) {
-    $sql_query .= " AND PET.petprice <= $filter_max";
-}
+if (!empty($filter_sID)) { $sql_query .= " AND SPECIE.sID = '$filter_sID'"; }
+if (!empty($filter_bID)) { $sql_query .= " AND BREED.bID = '$filter_bID'"; }
+if (!empty($filter_min)) { $sql_query .= " AND PET.petprice >= $filter_min"; }
+if (!empty($filter_max)) { $sql_query .= " AND PET.petprice <= $filter_max"; }
 if (!empty($searchKeyword)) {
     $sql_query .= " AND (BREED.bName LIKE '%$searchKeyword%' 
                      OR STORE.storeName LIKE '%$searchKeyword%' 
                      OR PET.personality LIKE '%$searchKeyword%')";
 }
 
-$sql_query .= " ORDER BY PET.petID ASC"; // 升冪
+$sql_query .= " ORDER BY PET.petID ASC";
 ?>
 
 <!DOCTYPE html>
@@ -170,6 +182,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
             max-height: 200px;
             overflow-y: auto;
         }
+        /* 自定義黑色按鈕 */
         .btn-dark-custom {
             background-color: #212529;
             color: white;
@@ -198,7 +211,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                     <i class="fas fa-list-ul"></i> 管理品種
                 </button>
                 <button class="btn btn-dark-custom btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addPetBox">
-                    <i class="fas fa-paw"></i> <?php echo $editData ? '編輯寵物 (展開中)' : '新增寵物'; ?>
+                    <i class="fas fa-paw"></i> <?php echo $editData ? '編輯寵物' : '新增寵物'; ?>
                 </button>
             </div>
         </div>
@@ -251,7 +264,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
         <div class="mb-3">
             <div class="collapse mb-2" id="addSpecieBox">
                 <div class="card bg-light border-secondary">
-                    <div class="card-header bg-secondary text-white py-1">管理物種 (Specie)</div>
+                    <div class="card-header bg-secondary text-white py-1">管理物種</div>
                     <div class="card-body">
                         <form method="post" class="row g-2 align-items-center mb-3">
                             <div class="col-auto"><label class="fw-bold">新名稱：</label></div>
@@ -278,7 +291,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
 
             <div class="collapse mb-2" id="addBreedBox">
                 <div class="card bg-light border-dark">
-                    <div class="card-header bg-dark text-white py-1">管理品種 (Breed)</div>
+                    <div class="card-header bg-dark text-white py-1">管理品種</div>
                     <div class="card-body">
                         <form method="post" class="row g-2 align-items-center mb-3">
                             <div class="col-auto"><label class="fw-bold">所屬物種：</label></div>
@@ -424,8 +437,10 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                     <th>照片</th>
                     <th>物種</th>
                     <th>品種</th>
-                    <th>分店</th>
+                    <th>個性</th>
+                    <th>性別</th>
                     <th>狀態</th>
+                    <th>分店</th>
                     <th>價格</th>
                     <th>操作</th>
                 </tr>
@@ -433,16 +448,18 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
             <tbody>
                 <?php
                 $result = $conn->query($sql_query);
+                
+                // 1. 定義商店顏色輪播清單
                 $colorMap = [
-                    'text-primary',   // 0: 藍色
-                    'text-success',   // 1: 綠色
-                    'text-danger',    // 2: 紅色
-                    'text-info',      // 3: 淺藍
-                    'text-dark',      // 4: 黑色 (深灰)
-                    'text-secondary', // 5: 灰色
-                    'text-warning'    // 6: 黃色
+                    'text-primary',   // 藍色
+                    'text-success',   // 綠色
+                    'text-danger',    // 紅色
+                    'text-info',      // 淺藍
+                    'text-dark',      // 黑色
+                    'text-secondary', // 灰色
+                    'text-warning'    // 黃色
                 ];
-                $colorCount = count($colorMap);
+                $colorCount = count($colorMap); 
 
                 if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
@@ -456,21 +473,43 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                         // 搜尋高亮
                         $showBreed = $row['bName'];
                         $showStore = $row['storeName'];
-                        $showPers = $row['personality'];
+                        $showPers = $row['personality']; // 個性欄位內容
                         if (!empty($searchKeyword)) {
                             $showBreed = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showBreed);
                             $showStore = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showStore);
                             $showPers = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showPers);
                         }
+
+                        // 2. 商店ID顏色判斷
                         $colorIndex = $row['storeID'] % $colorCount;
                         $idColorClass = $colorMap[$colorIndex];
 
+                        // 3. 物種顏色判斷
+                        $sName = $row['sName'];
+                        $speciesBadgeClass = 'bg-dark';
+                        if ($sName == '貓') {
+                            $speciesBadgeClass = 'bg-secondary'; // 貓灰色
+                        } elseif ($sName == '狗') {
+                            $speciesBadgeClass = 'bg-primary';   // 狗藍色
+                        }
+
+                        // 4. 狀態顏色判斷
+                        $status = $row['status'];
+                        $statusBadgeClass = 'bg-info text-dark';
+                        if ($status == '已預約') {
+                            $statusBadgeClass = 'bg-success';
+                        } elseif ($status == '已售出') {
+                            $statusBadgeClass = 'bg-danger';
+                        }
+
+                        // ★ 修改後的表格列 (加入了個性、性別、調整順序)
                         echo "<tr>
-                                <td class='fw-bold {$idColorClass}'>{$visualID}</td> <td>{$imgHtml}</td>
-                                <td><span class='badge bg-secondary'>{$row['sName']}</span></td>
+                                <td class='fw-bold {$idColorClass}'>{$visualID}</td> 
+                                <td>{$imgHtml}</td>
+                                <td><span class='badge {$speciesBadgeClass}'>{$sName}</span></td>
                                 <td>{$showBreed}</td>
+                                <td><small class='text-muted'>{$showPers}</small></td> <td>{$row['sex']}</td> <td><span class='badge {$statusBadgeClass}'>{$status}</span></td>
                                 <td>{$showStore}</td>
-                                <td><span class='badge bg-info text-dark'>{$row['status']}</span></td>
                                 <td class='text-success fw-bold'>$ {$row['petprice']}</td>
                                 <td>
                                     <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
@@ -479,7 +518,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='8' class='text-center p-5 text-muted'>
+                    echo "<tr><td colspan='10' class='text-center p-5 text-muted'>
                             <i class='fas fa-box-open fa-3x mb-3'></i><br>查無符合條件的資料
                           </td></tr>";
                 }
