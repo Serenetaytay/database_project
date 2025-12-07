@@ -81,6 +81,18 @@ $sql_query .= " ORDER BY P.pID DESC";
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-dark-custom {
+            background-color: #212529;
+            color: white;
+            border-color: #212529;
+        }
+        .btn-dark-custom:hover {
+            background-color: #424649;
+            border-color: #373b3e;
+            color: white;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
@@ -96,15 +108,15 @@ $sql_query .= " ORDER BY P.pID DESC";
                        value="<?php echo htmlspecialchars($searchKeyword); ?>">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">查詢</button>
+                <button type="submit" class="btn btn-secondary">查詢</button>
                 <?php if(!empty($searchKeyword)): ?>
                     <a href="product_mngt.php" class="btn btn-outline-secondary">清除</a>
                 <?php endif; ?>
             </div>
         </form>
 
-        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-success-subtle">
-            <h5 class="text-success mb-3"><?php echo $editData ? '✏️ 編輯商品資料' : '➕ 新增商品'; ?></h5>
+        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-secondary-subtle">
+            <h5 class="text-secondary mb-3"><?php echo $editData ? '✏️ 編輯商品資料' : '➕ 新增商品'; ?></h5>
             
             <input type="hidden" name="pID" value="<?php echo $editData['pID'] ?? ''; ?>">
             <input type="hidden" name="old_image" value="<?php echo $editData['pImage'] ?? ''; ?>">
@@ -145,7 +157,7 @@ $sql_query .= " ORDER BY P.pID DESC";
             </div>
 
             <div class="col-12">
-                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-warning' : 'btn-success'; ?> w-100">
+                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
                     <?php echo $editData ? '確認修改' : '新增商品'; ?>
                 </button>
                 <?php if($editData): ?>
@@ -155,7 +167,7 @@ $sql_query .= " ORDER BY P.pID DESC";
         </form>
 
         <table class="table table-hover bg-white shadow-sm align-middle">
-            <thead class="table-success">
+            <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>圖片</th> 
@@ -193,8 +205,8 @@ $sql_query .= " ORDER BY P.pID DESC";
                                 <td>{$showStore}</td>
                                 <td>{$row['stock']}</td>
                                 <td>
-                                    <a href='?edit={$row['pID']}' class='btn btn-sm btn-warning mb-1'>編輯</a>
-                                    <a href='?del={$row['pID']}' class='btn btn-sm btn-outline-danger mb-1' onclick='return confirm(\"確定刪除？\")'>刪除</a>
+                                    <a href='?edit={$row['pID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
+                                    <a href='?del={$row['pID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除？\")'><i class='fas fa-trash'></i></a>
                                 </td>
                               </tr>";
                     }

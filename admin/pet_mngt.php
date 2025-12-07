@@ -253,7 +253,7 @@ $sql_query .= " ORDER BY PET.petID ASC";
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="關鍵字..." value="<?php echo htmlspecialchars($searchKeyword); ?>">
                 </div>
                 <div class="col-md-2 d-flex">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 me-1"><i class="fas fa-search"></i> 查詢</button>
+                    <button type="submit" class="btn btn-secondary btn-sm w-100 me-1"><i class="fas fa-search"></i> 查詢</button>
                     <?php if(!empty($searchKeyword) || !empty($filter_sID) || !empty($filter_min)): ?>
                         <a href="pet_mngt.php" class="btn btn-outline-secondary btn-sm w-50">清除</a>
                     <?php endif; ?>
@@ -330,7 +330,7 @@ $sql_query .= " ORDER BY PET.petID ASC";
             </div>
 
             <div class="collapse <?php echo $showCollapse; ?>" id="addPetBox">
-                <form method="post" enctype="multipart/form-data" class="card p-4 bg-white shadow-sm border border-dark border-2">
+                <form method="post" enctype="multipart/form-data" class="card p-4 bg-white shadow-sm border border-secondary border-2">
                     <div class="d-flex justify-content-between mb-3">
                         <h5 class="text-dark m-0">
                             <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯寵物資料' : '<i class="fas fa-plus-circle"></i> 新增寵物資料'; ?>

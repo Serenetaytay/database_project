@@ -86,6 +86,18 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     <title>商店管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-dark-custom {
+            background-color: #212529;
+            color: white;
+            border-color: #212529;
+        }
+        .btn-dark-custom:hover {
+            background-color: #424649;
+            border-color: #373b3e;
+            color: white;
+        }
+    </style>
 </head>
 <body class="bg-light">
     
@@ -103,15 +115,15 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                        value="<?php echo htmlspecialchars($searchKeyword); ?>">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">查詢</button>
+                <button type="submit" class="btn btn-secondary">查詢</button>
                 <?php if(!empty($searchKeyword)): ?>
                     <a href="store_mngt.php" class="btn btn-outline-secondary">清除</a>
                 <?php endif; ?>
             </div>
         </form>
         
-        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-primary-subtle">
-            <h5 class="text-primary mb-3">
+        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-dark border-2">
+            <h5 class="text-dark mb-3">
                 <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯商店資料' : '<i class="fas fa-plus-circle"></i> 新增商店'; ?>
             </h5>
             
@@ -119,23 +131,22 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
             <input type="hidden" name="old_image" value="<?php echo $editData['storeImage'] ?? ''; ?>">
 
             <div class="col-md-3">
-                <label class="form-label small text-muted">店名</label>
-                <input type="text" name="storeName" class="form-control" placeholder="" required
+                <label class="col-form-label fw-bold">店名</label>
+                <input type="text" name="storeName" class="form-control" placeholder="店名" required
                        value="<?php echo $editData['storeName'] ?? ''; ?>">
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted">地址</label>
-                <input type="text" name="address" class="form-control" placeholder=""
+                <label class="col-form-label fw-bold">地址</label>
+                <input type="text" name="address" class="form-control" placeholder="地址"
                        value="<?php echo $editData['address'] ?? ''; ?>">
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">電話</label>
-                <input type="text" name="Phone" class="form-control" placeholder=""
+                <label class="col-form-label fw-bold">電話</label>
+                <input type="text" name="Phone" class="form-control" placeholder="電話"
                        value="<?php echo $editData['Phone'] ?? ''; ?>">
             </div>
-            
             <div class="col-md-4">
-                <label class="form-label small text-muted">營業時間 (開始 ~ 結束)</label>
+                <label class="col-form-label fw-bold">營業時間</label>
                 <div class="input-group">
                     <input type="time" name="open_time" class="form-control" required 
                            value="<?php echo $open_val; ?>">
@@ -144,11 +155,9 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                            value="<?php echo $close_val; ?>">
                 </div>
             </div>
-            
             <div class="col-md-12">
-                <label class="form-label small text-muted">門市照片 (若不修改請留空)</label>
+                <label class="col-form-label fw-bold">門市照片</label>
                 <input type="file" name="storeImage" class="form-control" accept="image/*">
-                
                 <?php if ($editData && !empty($editData['storeImage'])): ?>
                     <div class="mt-2 text-muted small">
                         目前圖片：<br>
@@ -158,7 +167,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
             </div>
 
             <div class="col-12 mt-3">
-                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-warning' : 'btn-success'; ?> w-100">
+                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
                     <?php echo $editData ? '<i class="fas fa-check"></i> 確認修改' : '<i class="fas fa-plus"></i> 新增商店'; ?>
                 </button>
                 <?php if($editData): ?>
@@ -168,30 +177,27 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
         </form>
 
         <table class="table table-hover bg-white shadow-sm align-middle rounded overflow-hidden">
-            <thead class="table-success">
+            <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>照片</th> 
                     <th>店名</th>
                     <th>地址</th>
                     <th>電話</th>
-                    <th>營業時間</th> <th>操作</th>
+                    <th>營業時間</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // 使用上方定義的 $sql_query 進行查詢
                 $res = $conn->query($sql_query);
-                
                 if ($res && $res->num_rows > 0) {
                     while ($row = $res->fetch_assoc()) {
-                        // 處理圖片顯示
-                        $imgHtml = "<span class='text-muted small'>無圖片</span>";
+                        $imgHtml = "<span class='text-muted small'>無</span>";
                         if (!empty($row['storeImage'])) {
-                            $imgHtml = "<img src='{$row['storeImage']}' alt='Store' style='width: 80px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
+                            $imgHtml = "<img src='{$row['storeImage']}' style='width: 80px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
                         }
                         
-                        // 處理搜尋關鍵字高亮
                         $showName = $row['storeName'];
                         $showAddr = $row['address'];
                         if (!empty($searchKeyword)) {
