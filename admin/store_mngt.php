@@ -107,7 +107,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
     <div class="container mt-4">
-        <h3>商店管理 (Store)</h3>
+        <h3>商店管理</h3>
 
         <form method="get" class="row mb-4 align-items-center">
             <div class="col-auto">
