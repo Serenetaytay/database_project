@@ -405,7 +405,14 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
         <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th><th>照片</th><th>物種</th><th>品種</th><th>分店</th><th>狀態</th><th>價格</th><th>操作</th>
+                    <th>編號 (分店-ID)</th> 
+                    <th>照片</th>
+                    <th>物種</th>
+                    <th>品種</th>
+                    <th>分店</th>
+                    <th>狀態</th>
+                    <th>價格</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
@@ -418,6 +425,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                         if (!empty($row['petImage'])) {
                             $imgHtml = "<img src='{$row['petImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px;'>";
                         }
+                        $visualID = $row['storeID'] . "-" . str_pad($row['petID'], 3, '0', STR_PAD_LEFT);
 
                         $showBreed = $row['bName'];
                         $showStore = $row['storeName'];
@@ -429,7 +437,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                         }
 
                         echo "<tr>
-                                <td>{$row['petID']}</td>
+                                <td class='fw-bold text-primary'>{$visualID}</td> 
                                 <td>{$imgHtml}</td>
                                 <td><span class='badge bg-secondary'>{$row['sName']}</span></td>
                                 <td>{$showBreed}</td>
