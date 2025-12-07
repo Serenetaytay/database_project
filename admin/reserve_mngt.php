@@ -140,7 +140,7 @@ $sql_query .= " ORDER BY reserve.time DESC";
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">選擇寵物 (僅顯示在店)</label>
+                    <label class="col-form-label fw-bold">選擇寵物 (僅顯示在店)</label>
                     <select name="petID" class="form-select" required>
                         <option value="">請選擇...</option>
                         <?php
@@ -164,17 +164,17 @@ $sql_query .= " ORDER BY reserve.time DESC";
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">預約人姓名</label>
+                    <label class="col-form-label fw-bold">預約人姓名</label>
                     <input type="text" name="rName" class="form-control" required
                            value="<?php echo $editData['rName'] ?? ''; ?>">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">電話</label>
+                    <label class="col-form-label fw-bold">電話</label>
                     <input type="text" name="rPhone" class="form-control" required
                            value="<?php echo $editData['rPhone'] ?? ''; ?>">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">預約時間</label>
+                    <label class="col-form-label fw-bold">預約時間</label>
                     <?php 
                         $timeValue = '';
                         if ($editData) {
