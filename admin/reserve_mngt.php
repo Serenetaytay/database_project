@@ -96,7 +96,7 @@ $sql_query .= " ORDER BY reserve.time DESC";
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
     <div class="container mt-4">
-        <h2 class="mb-4">預約管理 (Reserve)</h2>
+        <h3 class="mb-4">預約管理</h3>
 
         <!-- 搜尋欄位 -->
         <form method="get" class="row mb-4 align-items-center">
