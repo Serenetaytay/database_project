@@ -179,7 +179,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
     <div class="container mt-4">
         
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>🐶 寵物管理 (Pet)</h3>
+            <h3>寵物管理</h3>
             <div>
                 <button class="btn btn-outline-info btn-sm me-1" type="button" data-bs-toggle="collapse" data-bs-target="#addSpecieBox">
                     <i class="fas fa-list-ul"></i> 管理物種
