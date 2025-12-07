@@ -1,22 +1,20 @@
 <?php
 include 'db_connect.php';
-// --- 1. 處理讀取舊資料 (編輯模式) ---
-$editData = null; // 初始化變數
+// --- 處理讀取舊資料 (編輯模式) ---
+$editData = null;
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
-    // 撈出要編輯的那一筆資料
     $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
     $editData = $result->fetch_assoc();
 }
 
-// --- 2. 處理表單送出 (新增 或 修改) ---
+// --- 處理表單送出 (新增 或 修改) ---
 if (isset($_POST['save'])) {
     $name = $_POST['storeName'];
     $addr = $_POST['address'];
     $phone = $_POST['Phone'];
     $time = $_POST['worktime'];
     
-    // 檢查是否有隱藏的 storeID，有就是修改，沒有就是新增
     if (!empty($_POST['storeID'])) {
         // [修改操作] SQL Update
         $id = $_POST['storeID'];
@@ -35,7 +33,7 @@ if (isset($_POST['save'])) {
     }
 }
 
-// --- 2. 處理資料儲存 (新增 或 修改) ---
+// --- 處理資料儲存 (新增 或 修改) ---
 if (isset($_POST['save'])) {
     $storeName = $_POST['storeName'];
     $address = $_POST['address'];
@@ -82,15 +80,14 @@ if (isset($_POST['save'])) {
     }
 }
 
-// --- 3. 處理刪除 ---
+// --- 處理刪除 ---
 if (isset($_GET['del'])) {
-    // 刪除前可以先查出圖片路徑並刪除檔案 (選做)
     $conn->query("DELETE FROM STORE WHERE storeID={$_GET['del']}");
     header("Location: store_mngt.php");
     exit();
 }
 
-// --- 4. 處理搜尋 ---
+// --- 處理搜尋 ---
 $searchKeyword = '';
 $sql_query = "SELECT * FROM STORE"; // 預設查全部
 
@@ -200,8 +197,6 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                         if (!empty($row['storeImage'])) {
                             $imgHtml = "<img src='{$row['storeImage']}' alt='Store' style='width: 80px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
                         }
-
-                        // 處理搜尋關鍵字高亮 (非必須，但體驗較好)
                         $showName = $row['storeName'];
                         $showAddr = $row['address'];
                         if (!empty($searchKeyword)) {

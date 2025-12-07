@@ -1,7 +1,7 @@
 <?php
 include 'db_connect.php';
 
-// --- 1. 編輯模式：讀取舊資料 ---
+// --- 編輯模式：讀取舊資料 ---
 $editData = null;
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
@@ -9,7 +9,7 @@ if (isset($_GET['edit'])) {
     $editData = $result->fetch_assoc();
 }
 
-// --- 2. 處理資料儲存 (新增 或 修改) ---
+// --- 處理資料儲存 (新增 或 修改) ---
 if (isset($_POST['save'])) {
     $petID = $_POST['petID'];
     $rName = $_POST['rName'];
@@ -37,25 +37,23 @@ if (isset($_POST['save'])) {
     }
 }
 
-// --- 3. 處理刪除 (額外加的功能，方便管理) ---
+// --- 處理刪除 ---
 if (isset($_GET['del'])) {
     $conn->query("DELETE FROM reserve WHERE rID=" . $_GET['del']);
     header("Location: reserve_mngt.php");
     exit;
 }
 
-// --- 4. 確認預約 (Transaction / 高分功能) ---
-// 這是高分關鍵：同時更新兩個表 (保留原功能)
+// --- 確認預約 ---
 if (isset($_GET['confirm'])) {
     $rID = $_GET['confirm'];
-    $petID = $_GET['petID']; // 從網址參數取得
+    $petID = $_GET['petID']; 
 
-    // 開始交易
     $conn->begin_transaction();
     try {
-        // 1. 更新預約狀態
+        // 更新預約狀態
         $conn->query("UPDATE reserve SET status='已確認' WHERE rID=$rID");
-        // 2. 更新寵物狀態 (鎖定寵物)
+        // 更新寵物狀態 (鎖定寵物)
         $conn->query("UPDATE pet SET status='已預約' WHERE petID=$petID");
         
         // 兩者都成功才提交
@@ -68,9 +66,8 @@ if (isset($_GET['confirm'])) {
     }
 }
 
-// --- 5. 處理搜尋邏輯 ---
+// --- 處理搜尋邏輯 ---
 $searchKeyword = '';
-// 預設 SQL (JOIN 為了顯示寵物名和店名)
 $sql_query = "SELECT reserve.*, pet.petID, breed.bName, store.storeName 
               FROM reserve 
               JOIN pet ON reserve.petID = pet.petID 
@@ -85,7 +82,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                     OR breed.bName LIKE '%$searchKeyword%'";
 }
 
-$sql_query .= " ORDER BY reserve.time DESC"; // 加上排序
+$sql_query .= " ORDER BY reserve.time DESC";
 ?>
 
 <!DOCTYPE html>
@@ -129,17 +126,12 @@ $sql_query .= " ORDER BY reserve.time DESC"; // 加上排序
                     <select name="petID" class="form-select" required>
                         <option value="">請選擇...</option>
                         <?php
-                        // 這裡要稍微聰明一點：
-                        // 1. 如果是新增模式：只撈出 '在店' 的寵物
-                        // 2. 如果是編輯模式：要把 '原本選的那隻' 也撈出來，不然下拉選單會跑掉 (即使牠已經不是'在店'狀態)
-                        
                         $pet_sql = "SELECT pet.petID, breed.bName, store.storeName, pet.status 
                                     FROM pet 
                                     JOIN breed ON pet.bID = breed.bID 
                                     JOIN store ON pet.storeID = store.storeID 
                                     WHERE pet.status = '在店'";
                         
-                        // 如果是編輯模式，額外把目前這隻寵物加進選項 (UNION)
                         if ($editData) {
                             $currentPetID = $editData['petID'];
                             $pet_sql .= " OR pet.petID = $currentPetID";
@@ -148,7 +140,6 @@ $sql_query .= " ORDER BY reserve.time DESC"; // 加上排序
                         $res = $conn->query($pet_sql);
                         while ($r = $res->fetch_assoc()) { 
                             $selected = ($editData && $r['petID'] == $editData['petID']) ? 'selected' : '';
-                            // 顯示資訊讓管理員好選
                             echo "<option value='{$r['petID']}' $selected>{$r['petID']}號 - {$r['bName']} ({$r['storeName']}) [{$r['status']}]</option>"; 
                         }
                         ?>
@@ -166,7 +157,6 @@ $sql_query .= " ORDER BY reserve.time DESC"; // 加上排序
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">預約時間</label>
-                    <!-- 注意：datetime-local 的 value 格式必須是 YYYY-MM-DDThh:mm -->
                     <?php 
                         $timeValue = '';
                         if ($editData) {

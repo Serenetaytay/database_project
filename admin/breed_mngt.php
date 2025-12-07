@@ -64,7 +64,6 @@ if (isset($_GET['del'])) {
         </thead>
         <tbody>
             <?php
-            // 使用 JOIN 來顯示物種名稱
             $sql = "SELECT breed.bID, breed.bName, specie.sName 
                     FROM breed 
                     JOIN specie ON breed.sID = specie.sID";

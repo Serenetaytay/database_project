@@ -51,10 +51,8 @@
             $sql = "SELECT COUNT(*) as cnt FROM PRODUCT WHERE stock < 10";
             $result = $conn->query($sql);
             
-            // 設定預設值為 0
             $low_stock_count = 0;
             
-            // 只有當查詢成功且有資料時，才更新數字
             if ($result && $row = $result->fetch_assoc()) {
                 $low_stock_count = $row['cnt'];
             }

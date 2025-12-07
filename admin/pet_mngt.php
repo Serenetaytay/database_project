@@ -32,12 +32,11 @@ if (isset($_POST['save_pet'])) {
     $sex = $_POST['sex'];
     $personality = $_POST['personality'];
     $petprice = $_POST['petprice'];
-    $status = $_POST['status'] ?? '在店'; // 編輯模式才有 status 欄位
+    $status = $_POST['status'] ?? '在店';
     
-    // 預設圖片路徑 (新增=空; 修改=舊圖)
     $imagePath = $_POST['old_image'] ?? '';
 
-    // --- 圖片上傳邏輯 ---
+    // --- 圖片上傳 ---
     if (isset($_FILES['petImage']) && $_FILES['petImage']['error'] === 0) {
         $uploadDir = 'uploads/';
         if (!is_dir($uploadDir)) {
@@ -90,7 +89,6 @@ $sql_query = "SELECT PET.*, BREED.bName, STORE.storeName
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchKeyword = $_GET['search'];
-    // 搜尋：品種名稱、分店名稱 或 個性描述
     $sql_query .= " WHERE BREED.bName LIKE '%$searchKeyword%' 
                     OR STORE.storeName LIKE '%$searchKeyword%' 
                     OR PET.personality LIKE '%$searchKeyword%'";
@@ -112,7 +110,7 @@ $sql_query .= " ORDER BY PET.petID DESC";
     
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>🐶 寵物管理 (Pet)</h3>
+            <h3>寵物管理 (Pet)</h3>
             
             <div>
                 <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#addSpecieBox">
@@ -213,7 +211,7 @@ $sql_query .= " ORDER BY PET.petID DESC";
                 
                 <div class="col-md-5">
                     <label class="form-label small text-muted">個性描述</label>
-                    <input type="text" name="personality" class="form-control" placeholder="例如：活潑、親人" value="<?php echo $editData['personality'] ?? ''; ?>">
+                    <input type="text" name="personality" class="form-control" placeholder="" value="<?php echo $editData['personality'] ?? ''; ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted">價格</label>

@@ -1,7 +1,7 @@
 <?php
 include 'db_connect.php';
 
-// --- 1. 編輯模式：讀取舊資料 ---
+// --- 編輯模式：讀取舊資料 ---
 $editData = null;
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
@@ -9,7 +9,7 @@ if (isset($_GET['edit'])) {
     $editData = $result->fetch_assoc();
 }
 
-// --- 2. 處理資料儲存 (新增 或 修改) ---
+// --- 處理資料儲存 (新增 或 修改) ---
 if (isset($_POST['save'])) {
     $pName = $_POST['pName'];
     $storeID = $_POST['storeID'];
@@ -46,7 +46,6 @@ if (isset($_POST['save'])) {
     }
     
     if ($conn->query($sql)) {
-        // 使用 javascript alert 提示後跳轉，體驗較好
         echo "<script>alert('$msg'); window.location.href='product_mngt.php';</script>";
         exit();
     } else {
@@ -54,14 +53,14 @@ if (isset($_POST['save'])) {
     }
 }
 
-// --- 3. 處理刪除 ---
+// --- 處理刪除 ---
 if (isset($_GET['del'])) {
     $conn->query("DELETE FROM PRODUCT WHERE pID={$_GET['del']}");
     header("Location: product_mngt.php");
     exit();
 }
 
-// --- 4. 處理搜尋邏輯 ---
+// --- 處理搜尋邏輯 ---
 $searchKeyword = '';
 // 預設 SQL：查詢所有商品並 JOIN 商店名稱
 $sql_query = "SELECT P.*, S.storeName 
@@ -74,7 +73,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     $sql_query .= " WHERE P.pName LIKE '%$searchKeyword%' OR S.storeName LIKE '%$searchKeyword%'";
 }
 
-$sql_query .= " ORDER BY P.pID DESC"; // 讓新資料排在前面
+$sql_query .= " ORDER BY P.pID DESC";
 ?>
 
 <!DOCTYPE html>
@@ -115,10 +114,8 @@ $sql_query .= " ORDER BY P.pID DESC"; // 讓新資料排在前面
                 <select name="storeID" class="form-select" required>
                     <option value="">選擇分店...</option>
                     <?php
-                    // 撈出所有分店供選擇
                     $res = $conn->query("SELECT * FROM STORE");
                     while ($r = $res->fetch_assoc()) {
-                        // ★關鍵：如果是編輯模式，且ID對上了，就加上 selected
                         $selected = ($editData && $r['storeID'] == $editData['storeID']) ? 'selected' : '';
                         echo "<option value='{$r['storeID']}' $selected>{$r['storeName']}</option>";
                     }
