@@ -1,87 +1,112 @@
 <?php
 session_start();
-// 檢查是否有登入 Session，沒有就踢回 login.php
+// 1. 檢查管理員權限
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     header("Location: login.php");
     exit();
 }
 include 'db_connect.php';
-// --- 處理讀取舊資料 (編輯模式) ---
+
+// --- 變數初始化 (防止編輯時報錯) ---
 $editData = null;
-$open_val = '';  // 預設開店時間變數
-$close_val = ''; // 預設打烊時間變數
+$open_default = '';  
+$close_default = '';
+
+// --- A. 編輯模式：讀取舊資料 ---
 if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
+    $id = intval($_GET['edit']); // 轉成數字防呆
     $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
-    $editData = $result->fetch_assoc();
-    if (!empty($editData['worktime']) && strpos($editData['worktime'], '~') !== false) {
-        $times = explode('~', $editData['worktime']);
-        $open_val = $times[0] ?? ''; // 取前半段
-        $close_val = $times[1] ?? ''; // 取後半段
-    } else {
-        $open_val = $editData['worktime'] ?? '';
+    
+    if ($result->num_rows > 0) {
+        $editData = $result->fetch_assoc();
+
+        
+        if (!empty($editData['worktime'])) {
+            // 使用 explode 拆分字串
+            $times = explode(' - ', $editData['worktime']);
+            
+            // 確保拆出來有兩個時間才填入
+            if (count($times) >= 2) {
+                $open_default = $times[0];  // 09:00
+                $close_default = $times[1]; // 18:00
+            } else {
+                // 如果舊格式不對，至少把前面的填進去，避免全空
+                $open_default = $editData['worktime'];
+            }
+        }
     }
 }
 
-// --- 處理表單送出 (新增 或 修改) ---
+// --- B. 資料儲存 (新增 或 修改) ---
 if (isset($_POST['save'])) {
-    $name = $_POST['storeName'];
-    $addr = $_POST['address'];
-    $phone = $_POST['Phone'];
-    $open_time = $_POST['open_time'];
-    $close_time = $_POST['close_time'];
-    $worktime = $open_time . '~' . $close_time;
-    $imagePath = $_POST['old_image'] ?? '';
-    // --- 圖片上傳處理 ---
+    // 1. 接收表單資料 (加上 real_escape_string 防止資料庫錯誤)
+    $name = $conn->real_escape_string($_POST['storeName']);
+    $addr = $conn->real_escape_string($_POST['address']);
+    $tel  = $conn->real_escape_string($_POST['Phone']);
+    
+    // 2. 處理時間：把兩個時間欄位接起來
+    // 結果會變成 "09:00 - 18:00"
+    $open = $_POST['open_time'];
+    $close = $_POST['close_time'];
+    $time = $conn->real_escape_string($open . ' - ' . $close);
+
+    // 3. 處理圖片上傳
+    $imagePath = $_POST['old_image'] ?? ''; // 預設用舊圖
+    
     if (isset($_FILES['storeImage']) && $_FILES['storeImage']['error'] === 0) {
-        $uploadDir = 'uploads/';
-        // 檢查資料夾是否存在
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        // 加上時間戳記防檔名重複
-        $fileName = time() . '_' . basename($_FILES['storeImage']['name']);
+        $uploadDir = '../uploads/'; 
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        
+        $fileName = time() . '_s_' . basename($_FILES['storeImage']['name']);
         $targetFile = $uploadDir . $fileName;
-
+        
         if (move_uploaded_file($_FILES['storeImage']['tmp_name'], $targetFile)) {
-            $imagePath = $targetFile; // 更新路徑
+            $imagePath = $targetFile;
         }
     }
 
-    // --- 判斷是 Update 還是 Insert ---
+    // 4. 判斷是 Update 還是 Insert
     if (!empty($_POST['storeID'])) {
-        // [修改 Update]
-        $id = $_POST['storeID'];
-        $sql = "UPDATE STORE SET storeName='$storeName', address='$address', Phone='$Phone', worktime='$worktime', storeImage='$imagePath' WHERE storeID=$id";
-        $msg = "商店資料修改成功！";
+        // [修改]
+        $id = intval($_POST['storeID']);
+        $sql = "UPDATE STORE SET 
+                storeName='$name', 
+                address='$addr', 
+                Phone='$tel', 
+                worktime='$time', 
+                storeImage='$imagePath' 
+                WHERE storeID=$id";
+        $msg = "修改成功！";
     } else {
-        // [新增 Insert]
+        // [新增]
         $sql = "INSERT INTO STORE (storeName, address, Phone, worktime, storeImage) 
-                VALUES ('$storeName', '$address', '$Phone', '$worktime', '$imagePath')";
-        $msg = "新增商店成功！";
+                VALUES ('$name', '$addr', '$tel', '$time', '$imagePath')";
+        $msg = "新增成功！";
     }
 
-    if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('$msg'); window.location.href='store_mngt.php';</script>";
-        exit();
+    if ($conn->query($sql)) {
+        echo "<script>alert('$msg'); location.href='store_mngt.php';</script>";
     } else {
         echo "Error: " . $conn->error;
     }
 }
 
-// --- 處理刪除 ---
+// --- C. 刪除邏輯 ---
 if (isset($_GET['del'])) {
-    $conn->query("DELETE FROM STORE WHERE storeID={$_GET['del']}");
-    header("Location: store_mngt.php");
-    exit();
-}
-$searchKeyword = '';
-$sql_query = "SELECT * FROM STORE"; // 預設查全部
-
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $searchKeyword = $_GET['search'];
-    // 搜尋店名或地址
-    $sql_query = "SELECT * FROM STORE WHERE storeName LIKE '%$searchKeyword%' OR address LIKE '%$searchKeyword%'";
+    $id = intval($_GET['del']);
+    // 使用 try-catch 避免刪除失敗時報錯
+    try {
+        if ($conn->query("DELETE FROM STORE WHERE storeID=$id")) {
+            echo "<script>alert('刪除成功！'); location.href='store_mngt.php';</script>";
+        } else {
+            throw new Exception($conn->error);
+        }
+    } catch (Exception $e) {
+        echo "<script>
+                alert('無法刪除！\\n可能原因：該分店底下還有商品或寵物資料。\\n請先清空該店關聯資料。'); 
+                location.href='store_mngt.php';
+              </script>";
+    }
 }
 ?>
 
@@ -92,146 +117,120 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     <title>商店管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .btn-dark-custom {
-            background-color: #212529;
-            color: white;
-            border-color: #212529;
-        }
-        .btn-dark-custom:hover {
-            background-color: #424649;
-            border-color: #373b3e;
-            color: white;
-        }
-    </style>
 </head>
 <body class="bg-light">
-    
     <?php include 'navbar.php'; ?>
     
     <div class="container mt-4">
-        <h3>商店管理</h3>
-
-        <form method="get" class="row mb-4 align-items-center">
-            <div class="col-auto">
-                <label class="col-form-label fw-bold">🔍 搜尋：</label>
-            </div>
-            <div class="col-auto">
-                <input type="text" name="search" class="form-control" placeholder="輸入店名或地址..." 
-                       value="<?php echo htmlspecialchars($searchKeyword); ?>">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-secondary">查詢</button>
-                <?php if(!empty($searchKeyword)): ?>
-                    <a href="store_mngt.php" class="btn btn-outline-secondary">清除</a>
-                <?php endif; ?>
-            </div>
-        </form>
+        <h3 class="fw-bold mb-4">  商店資訊管理</h3>
         
-        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-secondary border-2">
-            <h5 class="text-dark mb-3">
-                <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯商店資料' : '<i class="fas fa-plus-circle"></i> 新增商店'; ?>
-            </h5>
-            
-            <input type="hidden" name="storeID" value="<?php echo $editData['storeID'] ?? ''; ?>">
-            <input type="hidden" name="old_image" value="<?php echo $editData['storeImage'] ?? ''; ?>">
-
-            <div class="col-md-3">
-                <label class="col-form-label fw-bold">店名</label>
-                <input type="text" name="storeName" class="form-control" placeholder="店名" required
-                       value="<?php echo $editData['storeName'] ?? ''; ?>">
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-primary">
+                    <i class="fas fa-edit me-2"></i><?php echo $editData ? '編輯分店' : '新增分店'; ?>
+                </h5>
             </div>
-            <div class="col-md-3">
-                <label class="col-form-label fw-bold">地址</label>
-                <input type="text" name="address" class="form-control" placeholder="地址"
-                       value="<?php echo $editData['address'] ?? ''; ?>">
-            </div>
-            <div class="col-md-2">
-                <label class="col-form-label fw-bold">電話</label>
-                <input type="text" name="Phone" class="form-control" placeholder="電話"
-                       value="<?php echo $editData['Phone'] ?? ''; ?>">
-            </div>
-            <div class="col-md-4">
-                <label class="col-form-label fw-bold">營業時間</label>
-                <div class="input-group">
-                    <input type="time" name="open_time" class="form-control" required 
-                           value="<?php echo $open_val; ?>">
-                    <span class="input-group-text">~</span>
-                    <input type="time" name="close_time" class="form-control" required 
-                           value="<?php echo $close_val; ?>">
-                </div>
-            </div>
-            <div class="col-md-12">
-                <label class="col-form-label fw-bold">門市照片</label>
-                <input type="file" name="storeImage" class="form-control" accept="image/*">
-                <?php if ($editData && !empty($editData['storeImage'])): ?>
-                    <div class="mt-2 text-muted small">
-                        目前圖片：<br>
-                        <img src="<?php echo $editData['storeImage']; ?>" style="height: 80px; border-radius: 5px; border: 1px solid #ddd; padding: 2px;">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="row g-3">
+                    <input type="hidden" name="storeID" value="<?php echo $editData['storeID'] ?? ''; ?>">
+                    <input type="hidden" name="old_image" value="<?php echo $editData['storeImage'] ?? ''; ?>">
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">分店名稱</label>
+                        <input type="text" name="storeName" class="form-control" placeholder="例：台北信義店" required 
+                               value="<?php echo $editData['storeName'] ?? ''; ?>">
                     </div>
-                <?php endif; ?>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">電話</label>
+                        <input type="text" name="Phone" class="form-control" required 
+                               value="<?php echo $editData['Phone'] ?? ''; ?>">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">營業時間</label>
+                        <div class="input-group">
+                            <span class="input-group-text">從</span>
+                            <input type="time" name="open_time" class="form-control" required 
+                                   value="<?php echo $open_default; ?>">
+                            <span class="input-group-text">到</span>
+                            <input type="time" name="close_time" class="form-control" required 
+                                   value="<?php echo $close_default; ?>">
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">地址</label>
+                        <input type="text" name="address" class="form-control" required 
+                               value="<?php echo $editData['address'] ?? ''; ?>">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">門市照片</label>
+                        <input type="file" name="storeImage" class="form-control">
+                        <?php if(!empty($editData['storeImage'])): ?>
+                            <div class="mt-2 text-muted small">
+                                目前圖片：<a href="<?php echo $editData['storeImage']; ?>" target="_blank">查看</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="col-12 text-end">
+                        <?php if($editData): ?>
+                            <a href="store_mngt.php" class="btn btn-secondary me-2">取消編輯</a>
+                        <?php endif; ?>
+                        <button type="submit" name="save" class="btn btn-primary px-4">儲存設定</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <div class="col-12 mt-3">
-                <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
-                    <?php echo $editData ? '<i class="fas fa-check"></i> 確認修改' : '<i class="fas fa-plus"></i> 新增商店'; ?>
-                </button>
-                <?php if($editData): ?>
-                    <a href="store_mngt.php" class="btn btn-secondary w-100 mt-2">取消修改</a>
-                <?php endif; ?>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>分店列表</h5>
             </div>
-        </form>
-
-        <table class="table table-hover bg-white shadow-sm align-middle rounded overflow-hidden">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>照片</th> 
-                    <th>店名</th>
-                    <th>地址</th>
-                    <th>電話</th>
-                    <th>營業時間</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $res = $conn->query($sql_query);
-                if ($res && $res->num_rows > 0) {
-                    while ($row = $res->fetch_assoc()) {
-                        $imgHtml = "<span class='text-muted small'>無</span>";
-                        if (!empty($row['storeImage'])) {
-                            $imgHtml = "<img src='{$row['storeImage']}' style='width: 80px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>圖片</th>
+                            <th>店名</th>
+                            <th>電話 / 地址</th>
+                            <th>營業時間</th>
+                            <th class="text-end">管理操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $res = $conn->query("SELECT * FROM STORE");
+                        if($res->num_rows > 0){
+                            while($row = $res->fetch_assoc()){
+                                $img = !empty($row['storeImage']) ? $row['storeImage'] : "https://via.placeholder.com/100?text=No+Img";
+                                echo "<tr>
+                                    <td width='100'>
+                                        <img src='$img' class='rounded border' style='width: 80px; height: 60px; object-fit: cover;'>
+                                    </td>
+                                    <td class='fw-bold'>{$row['storeName']}</td>
+                                    <td>
+                                        <div class='small text-muted'>{$row['Phone']}</div>
+                                        <div>{$row['address']}</div>
+                                    </td>
+                                    <td><span class='badge bg-info text-dark'>{$row['worktime']}</span></td>
+                                    <td class='text-end'>
+                                        <a href='?edit={$row['storeID']}' class='btn btn-sm btn-warning me-1'><i class='fas fa-edit'></i> 編輯</a>
+                                        <a href='?del={$row['storeID']}' class='btn btn-sm btn-danger' onclick='return confirm(\"確定要刪除嗎？\");'><i class='fas fa-trash-alt'></i> 刪除</a>
+                                    </td>
+                                </tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='5' class='text-center py-4 text-muted'>目前沒有分店資料</td></tr>";
                         }
-                        
-                        $showName = $row['storeName'];
-                        $showAddr = $row['address'];
-                        if (!empty($searchKeyword)) {
-                            $showName = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showName);
-                            $showAddr = str_replace($searchKeyword, "<span class='bg-warning'>$searchKeyword</span>", $showAddr);
-                        }
-
-                        echo "<tr>
-                                <td>{$row['storeID']}</td>
-                                <td>{$imgHtml}</td>
-                                <td>{$showName}</td>
-                                <td>{$showAddr}</td>
-                                <td>{$row['Phone']}</td>
-                                <td><span class='badge bg-info text-dark'>{$row['worktime']}</span></td>
-                                <td>
-                                    <a href='?edit={$row['storeID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
-                                    <a href='?del={$row['storeID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確定刪除嗎？\")'><i class='fas fa-trash'></i></a>
-                                </td>
-                              </tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='7' class='text-center text-muted p-4'>沒有找到相關資料</td></tr>";
-                }
-                ?>
-            </tbody>
-        </table>
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div style="height: 50px;"></div>
 </body>
 </html>

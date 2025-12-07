@@ -73,7 +73,7 @@ include '../db_connect.php';
 
     <div class="container-fluid bg-white py-4 mt-5 border-top">
         <div class="container text-center text-muted">
-            <small>版權所有 © 2023 寵物領養系統 | 聯絡我們 | 隨時關注我們的社群媒體</small>
+            <small>版權所有 © 2025 寵愛寵物之家 | 聯絡我們 | 隨時關注我們的社群媒體</small>
         </div>
     </div>
 

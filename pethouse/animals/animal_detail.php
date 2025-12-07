@@ -7,7 +7,7 @@ $pet = $conn->query("SELECT PET.*, BREED.bName, STORE.storeName FROM PET JOIN BR
     <?php include '../nav_client.php'; ?>
     <div class="container mt-5"><div class="card p-4 border-0 shadow">
         <div class="row">
-            <div class="col-md-6"><img src="<?php echo $pet['petImage'] ? '../../'.$pet['petImage'] : 'https://via.placeholder.com/500'; ?>" class="img-fluid rounded"></div>
+            <div class="col-md-6"><img src="<?php echo $pet['petImage'] ? '../'.$pet['petImage'] : 'https://via.placeholder.com/500'; ?>" class="img-fluid rounded"></div>
             <div class="col-md-6">
                 <h2><?php echo $pet['bName']; ?></h2><h3 class="text-danger">$<?php echo $pet['petprice']; ?></h3>
                 <ul class="list-unstyled mt-3"><li> 分店：<?php echo $pet['storeName']; ?></li><li> 生日：<?php echo $pet['birth']; ?></li><li>🚻 性別：<?php echo $pet['sex']; ?></li><li> 個性：<?php echo $pet['personality']; ?></li></ul>
