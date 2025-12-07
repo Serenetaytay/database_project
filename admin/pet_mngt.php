@@ -155,7 +155,7 @@ if (!empty($searchKeyword)) {
                      OR PET.personality LIKE '%$searchKeyword%')";
 }
 
-$sql_query .= " ORDER BY PET.petID DESC";
+$sql_query .= " ORDER BY PET.petID ASC"; // 升冪
 ?>
 
 <!DOCTYPE html>
