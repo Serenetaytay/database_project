@@ -3,7 +3,7 @@
     <div class="container">
         <a class="navbar-brand fw-bold" href="/database_project/pethouse/index.php">
             
-            <img src="/database_project/pethouse/assets/logo1.png" 
+            <img src="/database_project/pethouse/assets/logo2.png" 
                  alt="Logo" 
                  class="rounded-circle border border-2 border-light shadow-sm"
                  style="height: 40px; width: 40px; object-fit: cover; margin-right: 10px; background-color: #fff;">
