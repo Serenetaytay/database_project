@@ -73,7 +73,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
     $sql_query .= " WHERE P.pName LIKE '%$searchKeyword%' OR S.storeName LIKE '%$searchKeyword%'";
 }
 
-$sql_query .= " ORDER BY P.pID DESC";
+$sql_query .= " ORDER BY P.pID ASC";
 ?>
 
 <!DOCTYPE html>
