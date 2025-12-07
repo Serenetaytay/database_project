@@ -29,6 +29,7 @@ if (isset($_POST['add_breed'])) {
 
 // 編輯模式：讀取舊資料
 $editData = null;
+$showCollapse = "";
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $stmt = $conn->prepare("SELECT * FROM PET WHERE petID = ?");
@@ -36,6 +37,7 @@ if (isset($_GET['edit'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $editData = $result->fetch_assoc();
+    $showCollapse = "show";
 }
 
 // 儲存寵物資料 (新增 或 修改)
@@ -151,63 +153,25 @@ $sql_query .= " ORDER BY PET.petID DESC";
     <div class="container mt-4">
         
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>🐶 寵物管理 (Pet Management)</h3>
+            <h3>🐶 寵物管理 (Pet)</h3>
             <div>
-                <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#addSpecieBox">
+                <button class="btn btn-outline-info btn-sm me-1" type="button" data-bs-toggle="collapse" data-bs-target="#addSpecieBox">
                     <i class="fas fa-plus"></i> 新增物種
                 </button>
-                <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addBreedBox">
+                <button class="btn btn-outline-warning btn-sm me-1" type="button" data-bs-toggle="collapse" data-bs-target="#addBreedBox">
                     <i class="fas fa-plus"></i> 新增品種
+                </button>
+                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addPetBox">
+                    <i class="fas fa-paw"></i> <?php echo $editData ? '編輯寵物 (展開中)' : '新增寵物'; ?>
                 </button>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6 collapse" id="addSpecieBox">
-                <div class="card card-body bg-info bg-opacity-10 border-info">
-                    <form method="post" class="row g-2 align-items-center">
-                        <div class="col-auto"><label class="fw-bold">新物種名稱：</label></div>
-                        <div class="col-auto">
-                            <input type="text" name="sName" class="form-control form-control-sm" placeholder="如：鳥、魚" required>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" name="add_specie" class="btn btn-sm btn-info text-white">新增</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="col-md-6 collapse" id="addBreedBox">
-                <div class="card card-body bg-warning bg-opacity-10 border-warning">
-                    <form method="post" class="row g-2 align-items-center">
-                        <div class="col-auto"><label class="fw-bold">所屬物種：</label></div>
-                        <div class="col-auto">
-                            <select name="sID" class="form-select form-select-sm" required>
-                                <option value="">選物種...</option>
-                                <?php
-                                $s_res = $conn->query("SELECT * FROM SPECIE");
-                                while($s = $s_res->fetch_assoc()) echo "<option value='{$s['sID']}'>{$s['sName']}</option>";
-                                ?>
-                            </select>
-                        </div>
-                        <div class="col-auto">
-                            <input type="text" name="bName" class="form-control form-control-sm" placeholder="新品種名" required>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" name="add_breed" class="btn btn-sm btn-warning text-dark">新增</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <form method="get" class="card p-3 mb-4 bg-white shadow-sm border-secondary">
-            <h6 class="text-muted mb-2"><i class="fas fa-filter"></i> 條件篩選與搜尋</h6>
+        <form method="get" class="card p-3 mb-3 bg-white shadow-sm border-secondary">
             <div class="row g-2 align-items-center">
-                
                 <div class="col-md-2">
-                    <label class="small text-muted">物種 (Specie)</label>
                     <select name="filter_sID" id="search_sID" class="form-select form-select-sm">
-                        <option value="">-- 全部 --</option>
+                        <option value="">-- 物種 --</option>
                         <?php
                         $s_res = $conn->query("SELECT * FROM SPECIE");
                         while ($s = $s_res->fetch_assoc()) {
@@ -217,11 +181,9 @@ $sql_query .= " ORDER BY PET.petID DESC";
                         ?>
                     </select>
                 </div>
-                
                 <div class="col-md-2">
-                    <label class="small text-muted">品種 (Breed)</label>
                     <select name="filter_bID" id="search_bID" class="form-select form-select-sm">
-                        <option value="">-- 全部 --</option>
+                        <option value="">-- 品種 --</option>
                         <?php
                         $b_res = $conn->query("SELECT * FROM BREED");
                         while ($b = $b_res->fetch_assoc()) {
@@ -231,149 +193,166 @@ $sql_query .= " ORDER BY PET.petID DESC";
                         ?>
                     </select>
                 </div>
-
                 <div class="col-md-3">
-                    <label class="small text-muted">價格範圍 (Price)</label>
                     <div class="input-group input-group-sm">
-                        <input type="number" name="filter_min" class="form-control" placeholder="最低" value="<?php echo $filter_min; ?>">
+                        <input type="number" name="filter_min" class="form-control" placeholder="最低價" value="<?php echo $filter_min; ?>">
                         <span class="input-group-text">~</span>
-                        <input type="number" name="filter_max" class="form-control" placeholder="最高" value="<?php echo $filter_max; ?>">
+                        <input type="number" name="filter_max" class="form-control" placeholder="最高價" value="<?php echo $filter_max; ?>">
                     </div>
                 </div>
-
                 <div class="col-md-3">
-                    <label class="small text-muted">關鍵字</label>
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="輸入特徵、品種或店名..." value="<?php echo htmlspecialchars($searchKeyword); ?>">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="關鍵字..." value="<?php echo htmlspecialchars($searchKeyword); ?>">
                 </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm w-100">
-                        <i class="fas fa-search"></i> 查詢
-                    </button>
+                <div class="col-md-2 d-flex">
+                    <button type="submit" class="btn btn-primary btn-sm w-100 me-1"><i class="fas fa-search"></i> 查詢</button>
+                    <?php if(!empty($searchKeyword) || !empty($filter_sID)): ?>
+                        <a href="pet_mngt.php" class="btn btn-outline-secondary btn-sm w-50">清除</a>
+                    <?php endif; ?>
                 </div>
             </div>
-            <?php if(!empty($searchKeyword) || !empty($filter_sID) || !empty($filter_bID) || !empty($filter_min)): ?>
-            <div class="mt-2 text-end">
-                <a href="pet_mngt.php" class="text-secondary small text-decoration-none"><i class="fas fa-times"></i> 清除所有搜尋條件</a>
-            </div>
-            <?php endif; ?>
         </form>
 
-        <form method="post" enctype="multipart/form-data" class="card p-4 mb-4 bg-white shadow-sm border border-primary-subtle">
-            <h5 class="text-primary mb-3">
-                <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯寵物資料 (ID: '.$editData['petID'].')' : '<i class="fas fa-plus-circle"></i> 新增寵物'; ?>
-            </h5>
+        <div class="mb-3">
             
-            <input type="hidden" name="petID" value="<?php echo $editData['petID'] ?? ''; ?>">
-            <input type="hidden" name="old_image" value="<?php echo $editData['petImage'] ?? ''; ?>">
-
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">品種</label>
-                    <select name="bID" class="form-select" required>
-                        <option value="">請選擇...</option>
-                        <?php
-                        $res = $conn->query("SELECT * FROM BREED");
-                        while ($r = $res->fetch_assoc()) { 
-                            $selected = ($editData && $r['bID'] == $editData['bID']) ? 'selected' : '';
-                            echo "<option value='{$r['bID']}' $selected>{$r['bName']}</option>"; 
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">所在分店</label>
-                    <select name="storeID" class="form-select" required>
-                        <option value="">請選擇...</option>
-                        <?php
-                        $res = $conn->query("SELECT * FROM STORE");
-                        while ($r = $res->fetch_assoc()) { 
-                            $selected = ($editData && $r['storeID'] == $editData['storeID']) ? 'selected' : '';
-                            echo "<option value='{$r['storeID']}' $selected>{$r['storeName']}</option>"; 
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">生日</label>
-                    <input type="date" name="birth" class="form-control" required value="<?php echo $editData['birth'] ?? ''; ?>">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">性別</label>
-                    <select name="sex" class="form-select">
-                        <option value="公" <?php echo ($editData && $editData['sex']=='公')?'selected':''; ?>>公</option>
-                        <option value="母" <?php echo ($editData && $editData['sex']=='母')?'selected':''; ?>>母</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-5">
-                    <label class="form-label small text-muted">個性描述</label>
-                    <input type="text" name="personality" class="form-control" placeholder="" value="<?php echo $editData['personality'] ?? ''; ?>">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">價格</label>
-                    <input type="number" name="petprice" class="form-control" required value="<?php echo $editData['petprice'] ?? ''; ?>">
-                </div>
-
-                <?php if($editData): ?>
-                <div class="col-md-4">
-                    <label class="form-label small text-danger fw-bold">狀態 (Status)</label>
-                    <select name="status" class="form-select border-danger">
-                        <option value="在店" <?php echo ($editData['status']=='在店')?'selected':''; ?>>在店</option>
-                        <option value="已預約" <?php echo ($editData['status']=='已預約')?'selected':''; ?>>已預約</option>
-                        <option value="已售出" <?php echo ($editData['status']=='已售出')?'selected':''; ?>>已售出</option>
-                    </select>
-                </div>
-                <?php endif; ?>
-                
-                <div class="col-md-12">
-                    <label class="form-label small text-muted">寵物照片</label>
-                    <input type="file" name="petImage" class="form-control" accept="image/*">
-                    <?php if ($editData && !empty($editData['petImage'])): ?>
-                        <div class="mt-2 text-muted small">
-                            目前圖片：<br>
-                            <img src="<?php echo $editData['petImage']; ?>" style="height: 100px; border-radius: 5px; border: 1px solid #ddd; padding: 2px;">
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="col-12 mt-4">
-                    <button type="submit" name="save_pet" class="btn <?php echo $editData ? 'btn-warning' : 'btn-primary'; ?> w-100">
-                        <?php echo $editData ? '<i class="fas fa-check"></i> 確認修改' : '<i class="fas fa-plus"></i> 新增寵物'; ?>
-                    </button>
-                    <?php if($editData): ?>
-                        <a href="pet_mngt.php" class="btn btn-outline-secondary w-100 mt-2">取消修改</a>
-                    <?php endif; ?>
+            <div class="collapse mb-2" id="addSpecieBox">
+                <div class="card card-body bg-info bg-opacity-10 border-info">
+                    <form method="post" class="row g-2 align-items-center">
+                        <div class="col-auto"><label class="fw-bold">新物種名稱：</label></div>
+                        <div class="col-auto"><input type="text" name="sName" class="form-control form-control-sm" required></div>
+                        <div class="col-auto"><button type="submit" name="add_specie" class="btn btn-sm btn-info text-white">確認新增</button></div>
+                    </form>
                 </div>
             </div>
-        </form>
 
-        <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
+            <div class="collapse mb-2" id="addBreedBox">
+                <div class="card card-body bg-warning bg-opacity-10 border-warning">
+                    <form method="post" class="row g-2 align-items-center">
+                        <div class="col-auto"><label class="fw-bold">所屬物種：</label></div>
+                        <div class="col-auto">
+                            <select name="sID" class="form-select form-select-sm" required>
+                                <option value="">請選擇</option>
+                                <?php
+                                $s_res = $conn->query("SELECT * FROM SPECIE");
+                                while($s = $s_res->fetch_assoc()) echo "<option value='{$s['sID']}'>{$s['sName']}</option>";
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-auto"><input type="text" name="bName" class="form-control form-control-sm" placeholder="新品種名" required></div>
+                        <div class="col-auto"><button type="submit" name="add_breed" class="btn btn-sm btn-warning text-dark">確認新增</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="collapse <?php echo $showCollapse; ?>" id="addPetBox">
+                <form method="post" enctype="multipart/form-data" class="card p-4 bg-white shadow-sm border border-primary border-2">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5 class="text-primary m-0">
+                            <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯寵物資料 (ID: '.$editData['petID'].')' : '<i class="fas fa-plus-circle"></i> 新增寵物資料'; ?>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#addPetBox"></button>
+                    </div>
+                    
+                    <input type="hidden" name="petID" value="<?php echo $editData['petID'] ?? ''; ?>">
+                    <input type="hidden" name="old_image" value="<?php echo $editData['petImage'] ?? ''; ?>">
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">品種</label>
+                            <select name="bID" class="form-select" required>
+                                <option value="">請選擇...</option>
+                                <?php
+                                $res = $conn->query("SELECT * FROM BREED");
+                                while ($r = $res->fetch_assoc()) { 
+                                    $selected = ($editData && $r['bID'] == $editData['bID']) ? 'selected' : '';
+                                    echo "<option value='{$r['bID']}' $selected>{$r['bName']}</option>"; 
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">分店</label>
+                            <select name="storeID" class="form-select" required>
+                                <option value="">請選擇...</option>
+                                <?php
+                                $res = $conn->query("SELECT * FROM STORE");
+                                while ($r = $res->fetch_assoc()) { 
+                                    $selected = ($editData && $r['storeID'] == $editData['storeID']) ? 'selected' : '';
+                                    echo "<option value='{$r['storeID']}' $selected>{$r['storeName']}</option>"; 
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">生日</label>
+                            <input type="date" name="birth" class="form-control" required value="<?php echo $editData['birth'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">性別</label>
+                            <select name="sex" class="form-select">
+                                <option value="公" <?php echo ($editData && $editData['sex']=='公')?'selected':''; ?>>公</option>
+                                <option value="母" <?php echo ($editData && $editData['sex']=='母')?'selected':''; ?>>母</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted">個性</label>
+                            <input type="text" name="personality" class="form-control" value="<?php echo $editData['personality'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">價格</label>
+                            <input type="number" name="petprice" class="form-control" required value="<?php echo $editData['petprice'] ?? ''; ?>">
+                        </div>
+
+                        <?php if($editData): ?>
+                        <div class="col-md-4">
+                            <label class="form-label small text-danger fw-bold">狀態</label>
+                            <select name="status" class="form-select border-danger">
+                                <option value="在店" <?php echo ($editData['status']=='在店')?'selected':''; ?>>在店</option>
+                                <option value="已預約" <?php echo ($editData['status']=='已預約')?'selected':''; ?>>已預約</option>
+                                <option value="已售出" <?php echo ($editData['status']=='已售出')?'selected':''; ?>>已售出</option>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label small text-muted">照片</label>
+                            <input type="file" name="petImage" class="form-control" accept="image/*">
+                            <?php if ($editData && !empty($editData['petImage'])): ?>
+                                <div class="mt-2">
+                                    <img src="<?php echo $editData['petImage']; ?>" style="height: 100px; border-radius: 5px; border: 1px solid #ddd;">
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="col-12 mt-3 text-end">
+                            <?php if($editData): ?>
+                                <a href="pet_mngt.php" class="btn btn-secondary me-2">取消</a>
+                            <?php endif; ?>
+                            <button type="submit" name="save_pet" class="btn <?php echo $editData ? 'btn-warning' : 'btn-primary'; ?>">
+                                <?php echo $editData ? '<i class="fas fa-check"></i> 確認修改' : '<i class="fas fa-plus"></i> 確認新增'; ?>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <table class="table table-hover align-middle bg-white shadow-sm">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
-                    <th>照片</th> 
-                    <th>物種</th>
-                    <th>品種</th>
-                    <th>分店</th>
-                    <th>狀態</th>
-                    <th>價格</th>
-                    <th>操作</th>
+                    <th>ID</th><th>照片</th><th>物種</th><th>品種</th><th>分店</th><th>狀態</th><th>價格</th><th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 $result = $conn->query($sql_query);
-                
                 if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        // 圖片顯示
                         $imgHtml = "<span class='text-muted small'>無</span>";
                         if (!empty($row['petImage'])) {
                             $imgHtml = "<img src='{$row['petImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px;'>";
                         }
-
-                        // 搜尋關鍵字高亮 (UX)
+                        
                         $showBreed = $row['bName'];
                         $showStore = $row['storeName'];
                         $showPers = $row['personality'];
@@ -392,15 +371,13 @@ $sql_query .= " ORDER BY PET.petID DESC";
                                 <td><span class='badge bg-info text-dark'>{$row['status']}</span></td>
                                 <td class='text-success fw-bold'>$ {$row['petprice']}</td>
                                 <td>
-                                    <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1' title='編輯'><i class='fas fa-edit'></i></a>
-                                    <a href='?del={$row['petID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除此寵物資料？\")' title='刪除'><i class='fas fa-trash'></i></a>
+                                    <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
+                                    <a href='?del={$row['petID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除？\")'><i class='fas fa-trash'></i></a>
                                 </td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='8' class='text-center p-5 text-muted'>
-                            <i class='fas fa-box-open fa-3x mb-3'></i><br>查無符合條件的資料
-                          </td></tr>";
+                    echo "<tr><td colspan='8' class='text-center p-5 text-muted'>查無資料</td></tr>";
                 }
                 ?>
             </tbody>
@@ -417,30 +394,24 @@ $sql_query .= " ORDER BY PET.petID DESC";
 
         function filterBreeds() {
             const selectedSpecieID = specieSelect.value;
-            const currentSelectedBreed = "<?php echo $filter_bID; ?>";
+            const currentSelectedBreed = "<?php echo $filter_bID; ?>"; 
+
             breedSelect.innerHTML = '';
             allBreeds.forEach(option => {
                 const sid = option.getAttribute('data-sid');
                 const val = option.value;
-
-                // 條件：(選全部) 或 (該選項屬於選中的物種) 或 (該選項是"全部"這個標籤)
                 if (selectedSpecieID === "" || sid === selectedSpecieID || val === "") {
-                    const newOption = option.cloneNode(true);
-                    breedSelect.appendChild(newOption);
+                    breedSelect.appendChild(option.cloneNode(true));
                 }
             });
-
             breedSelect.value = currentSelectedBreed;
-            if (breedSelect.selectedIndex === -1) {
-                breedSelect.value = "";
-            }
+            if (breedSelect.selectedIndex === -1) breedSelect.value = "";
         }
 
         specieSelect.addEventListener('change', function() {
             filterBreeds();
             breedSelect.value = ""; 
         });
-
         filterBreeds();
     });
     </script>
