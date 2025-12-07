@@ -98,6 +98,18 @@ $sql_query .= " ORDER BY reserve.time DESC";
     <title>預約管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-dark-custom {
+            background-color: #212529;
+            color: white;
+            border-color: #212529;
+        }
+        .btn-dark-custom:hover {
+            background-color: #424649;
+            border-color: #373b3e;
+            color: white;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
@@ -114,7 +126,7 @@ $sql_query .= " ORDER BY reserve.time DESC";
                        value="<?php echo htmlspecialchars($searchKeyword); ?>">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">查詢</button>
+                <button type="submit" class="btn btn-secondary">查詢</button>
                 <?php if(!empty($searchKeyword)): ?>
                     <a href="reserve_mngt.php" class="btn btn-outline-secondary">清除</a>
                 <?php endif; ?>
@@ -122,8 +134,8 @@ $sql_query .= " ORDER BY reserve.time DESC";
         </form>
 
         <!-- 表單區域 -->
-        <form method="post" class="card p-4 mb-4 bg-white shadow-sm border-primary">
-            <h5 class="card-title text-primary"><?php echo $editData ? '✏️ 編輯預約' : '➕ 新增預約'; ?></h5>
+        <form method="post" class="card p-4 mb-4 bg-white shadow-sm border-secondary">
+            <h5 class="card-title text-dark"><?php echo $editData ? '編輯預約' : '新增預約'; ?></h5>
             <input type="hidden" name="rID" value="<?php echo $editData['rID'] ?? ''; ?>">
 
             <div class="row g-3">
@@ -173,7 +185,7 @@ $sql_query .= " ORDER BY reserve.time DESC";
                            value="<?php echo $timeValue; ?>">
                 </div>
                 <div class="col-12">
-                    <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-warning' : 'btn-success'; ?> w-100">
+                    <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
                         <?php echo $editData ? '確認修改' : '新增預約'; ?>
                     </button>
                     <?php if($editData): ?>
