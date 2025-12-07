@@ -122,13 +122,13 @@ $sql_query .= " ORDER BY P.pID ASC";
         </form>
 
         <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-secondary-subtle">
-            <h5 class="text-secondary mb-3"><?php echo $editData ? '✏️ 編輯商品資料' : '➕ 新增商品'; ?></h5>
+            <h5 class="text-secondary mb-3"><?php echo $editData ? '編輯商品資料' : '新增商品'; ?></h5>
             
             <input type="hidden" name="pID" value="<?php echo $editData['pID'] ?? ''; ?>">
             <input type="hidden" name="old_image" value="<?php echo $editData['pImage'] ?? ''; ?>">
 
             <div class="col-md-3">
-                <label class="form-label small text-muted">所屬分店</label>
+                <label class="col-form-label fw-bold">所屬分店</label>
                 <select name="storeID" class="form-select" required>
                     <option value="">選擇分店...</option>
                     <?php
@@ -141,18 +141,18 @@ $sql_query .= " ORDER BY P.pID ASC";
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted">商品名稱</label>
+                <label class="col-form-label fw-bold">商品名稱</label>
                 <input type="text" name="pName" class="form-control" placeholder="商品名稱" required
                        value="<?php echo $editData['pName'] ?? ''; ?>">
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">庫存數量</label>
+                <label class="col-form-label fw-bold">庫存數量</label>
                 <input type="number" name="stock" class="form-control" placeholder="庫存" required
                        value="<?php echo $editData['stock'] ?? ''; ?>">
             </div>
             
             <div class="col-md-4">
-                <label class="form-label small text-muted">商品照片 (若不修改請留空)</label>
+                <label class="col-form-label fw-bold">商品照片</label>
                 <input type="file" name="pImage" class="form-control" accept="image/*">
                 <?php if ($editData && !empty($editData['pImage'])): ?>
                     <div class="mt-2 text-muted small">
