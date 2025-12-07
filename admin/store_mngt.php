@@ -1,4 +1,10 @@
 <?php
+session_start();
+// 檢查是否有登入 Session，沒有就踢回 login.php
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+    header("Location: login.php");
+    exit();
+}
 include 'db_connect.php';
 // --- 處理讀取舊資料 (編輯模式) ---
 $editData = null;
