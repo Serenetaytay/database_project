@@ -128,7 +128,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
             </div>
         </form>
         
-        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-dark border-2">
+        <form method="post" enctype="multipart/form-data" class="row g-3 mb-4 bg-white p-3 rounded shadow-sm border border-secondary border-2">
             <h5 class="text-dark mb-3">
                 <?php echo $editData ? '<i class="fas fa-edit"></i> 編輯商店資料' : '<i class="fas fa-plus-circle"></i> 新增商店'; ?>
             </h5>
