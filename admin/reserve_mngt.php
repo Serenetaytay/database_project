@@ -94,8 +94,8 @@ $sql_query .= " ORDER BY reserve.time DESC";
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-light">
-    <div class="container mt-5">
-        <a href="index.php" class="btn btn-secondary mb-3">回首頁</a>
+    <?php include 'navbar.php'; ?>
+    <div class="container mt-4">
         <h2 class="mb-4">預約管理 (Reserve)</h2>
 
         <!-- 搜尋欄位 -->

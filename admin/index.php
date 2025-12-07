@@ -11,7 +11,7 @@
     
     <div class="container">
         <div class="row text-center mb-4">
-            <h1>營運儀表板 (Dashboard)</h1>
+            <h1>營運儀表板</h1>
             <p class="text-muted">即時掌握店內狀況</p>
         </div>
 

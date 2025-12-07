@@ -85,7 +85,7 @@ $sql_query .= " ORDER BY P.pID DESC";
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
     <div class="container mt-4">
-        <h3>商品管理 (Product)</h3>
+        <h3>商品管理</h3>
         
         <form method="get" class="row mb-4 align-items-center">
             <div class="col-auto">
