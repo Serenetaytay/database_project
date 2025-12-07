@@ -165,6 +165,12 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
     <title>寵物管理系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .manage-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-light">
     
@@ -173,13 +179,13 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
     <div class="container mt-4">
         
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>寵物管理</h3>
+            <h3>🐶 寵物管理 (Pet)</h3>
             <div>
                 <button class="btn btn-outline-info btn-sm me-1" type="button" data-bs-toggle="collapse" data-bs-target="#addSpecieBox">
-                    <i class="fas fa-plus"></i> 新增物種
+                    <i class="fas fa-list-ul"></i> 管理物種
                 </button>
                 <button class="btn btn-outline-warning btn-sm me-1" type="button" data-bs-toggle="collapse" data-bs-target="#addBreedBox">
-                    <i class="fas fa-plus"></i> 新增品種
+                    <i class="fas fa-list-ul"></i> 管理品種
                 </button>
                 <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addPetBox">
                     <i class="fas fa-paw"></i> <?php echo $editData ? '編輯寵物 (展開中)' : '新增寵物'; ?>
@@ -225,7 +231,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                 </div>
                 <div class="col-md-2 d-flex">
                     <button type="submit" class="btn btn-primary btn-sm w-100 me-1"><i class="fas fa-search"></i> 查詢</button>
-                    <?php if(!empty($searchKeyword) || !empty($filter_sID)): ?>
+                    <?php if(!empty($searchKeyword) || !empty($filter_sID) || !empty($filter_min)): ?>
                         <a href="pet_mngt.php" class="btn btn-outline-secondary btn-sm w-50">清除</a>
                     <?php endif; ?>
                 </div>
@@ -233,33 +239,72 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
         </form>
 
         <div class="mb-3">
-            
             <div class="collapse mb-2" id="addSpecieBox">
-                <div class="card card-body bg-info bg-opacity-10 border-info">
-                    <form method="post" class="row g-2 align-items-center">
-                        <div class="col-auto"><label class="fw-bold">新物種名稱：</label></div>
-                        <div class="col-auto"><input type="text" name="sName" class="form-control form-control-sm" required></div>
-                        <div class="col-auto"><button type="submit" name="add_specie" class="btn btn-sm btn-info text-white">確認新增</button></div>
-                    </form>
+                <div class="card bg-info bg-opacity-10 border-info">
+                    <div class="card-header bg-info text-white py-1">管理物種 (Specie)</div>
+                    <div class="card-body">
+                        <form method="post" class="row g-2 align-items-center mb-3">
+                            <div class="col-auto"><label class="fw-bold">新名稱：</label></div>
+                            <div class="col-auto"><input type="text" name="sName" class="form-control form-control-sm" required></div>
+                            <div class="col-auto"><button type="submit" name="add_specie" class="btn btn-sm btn-primary">新增</button></div>
+                        </form>
+                        <hr>
+                        <div class="manage-list bg-white p-2 border rounded">
+                            <table class="table table-sm table-borderless mb-0">
+                                <?php
+                                $all_s = $conn->query("SELECT * FROM SPECIE");
+                                while ($row = $all_s->fetch_assoc()) {
+                                    echo "<tr>
+                                            <td>{$row['sName']}</td>
+                                            <td class='text-end'><a href='?del_specie={$row['sID']}' class='text-danger text-decoration-none' onclick='return confirm(\"確定刪除此物種？\\n(若有相關品種將無法刪除)\")'>[刪除]</a></td>
+                                          </tr>";
+                                }
+                                ?>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="collapse mb-2" id="addBreedBox">
-                <div class="card card-body bg-warning bg-opacity-10 border-warning">
-                    <form method="post" class="row g-2 align-items-center">
-                        <div class="col-auto"><label class="fw-bold">所屬物種：</label></div>
-                        <div class="col-auto">
-                            <select name="sID" class="form-select form-select-sm" required>
-                                <option value="">請選擇</option>
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-header bg-warning text-dark py-1">管理品種 (Breed)</div>
+                    <div class="card-body">
+                        <form method="post" class="row g-2 align-items-center mb-3">
+                            <div class="col-auto"><label class="fw-bold">所屬物種：</label></div>
+                            <div class="col-auto">
+                                <select name="sID" class="form-select form-select-sm" required>
+                                    <option value="">請選擇</option>
+                                    <?php
+                                    // 為了顯示方便，重新撈一次
+                                    $s_res2 = $conn->query("SELECT * FROM SPECIE");
+                                    while($s = $s_res2->fetch_assoc()) echo "<option value='{$s['sID']}'>{$s['sName']}</option>";
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="col-auto"><input type="text" name="bName" class="form-control form-control-sm" placeholder="新品種名" required></div>
+                            <div class="col-auto"><button type="submit" name="add_breed" class="btn btn-sm btn-primary">新增</button></div>
+                        </form>
+                        <hr>
+                        <div class="manage-list bg-white p-2 border rounded">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead><tr><th>物種</th><th>品種</th><th>操作</th></tr></thead>
+                                <tbody>
                                 <?php
-                                $s_res = $conn->query("SELECT * FROM SPECIE");
-                                while($s = $s_res->fetch_assoc()) echo "<option value='{$s['sID']}'>{$s['sName']}</option>";
+                                // JOIN SPECIE 顯示物種名
+                                $all_b = $conn->query("SELECT BREED.*, SPECIE.sName FROM BREED JOIN SPECIE ON BREED.sID = SPECIE.sID ORDER BY SPECIE.sID");
+                                while ($row = $all_b->fetch_assoc()) {
+                                    echo "<tr>
+                                            <td><span class='badge bg-secondary'>{$row['sName']}</span></td>
+                                            <td>{$row['bName']}</td>
+                                            <td class='text-end'><a href='?del_breed={$row['bID']}' class='text-danger text-decoration-none' onclick='return confirm(\"確定刪除此品種？\\n(若有相關寵物將無法刪除)\")'>[刪除]</a></td>
+                                          </tr>";
+                                }
                                 ?>
-                            </select>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-auto"><input type="text" name="bName" class="form-control form-control-sm" placeholder="新品種名" required></div>
-                        <div class="col-auto"><button type="submit" name="add_breed" class="btn btn-sm btn-warning text-dark">確認新增</button></div>
-                    </form>
+                    </div>
                 </div>
             </div>
 
@@ -357,7 +402,7 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
             </div>
         </div>
 
-        <table class="table table-hover align-middle bg-white shadow-sm">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th><th>照片</th><th>物種</th><th>品種</th><th>分店</th><th>狀態</th><th>價格</th><th>操作</th>
@@ -366,13 +411,14 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
             <tbody>
                 <?php
                 $result = $conn->query($sql_query);
+                
                 if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         $imgHtml = "<span class='text-muted small'>無</span>";
                         if (!empty($row['petImage'])) {
                             $imgHtml = "<img src='{$row['petImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px;'>";
                         }
-                        
+
                         $showBreed = $row['bName'];
                         $showStore = $row['storeName'];
                         $showPers = $row['personality'];
@@ -391,13 +437,15 @@ $sql_query .= " ORDER BY PET.petID ASC"; // 升冪
                                 <td><span class='badge bg-info text-dark'>{$row['status']}</span></td>
                                 <td class='text-success fw-bold'>$ {$row['petprice']}</td>
                                 <td>
-                                    <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
-                                    <a href='?del={$row['petID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除？\")'><i class='fas fa-trash'></i></a>
+                                    <a href='?edit={$row['petID']}' class='btn btn-warning btn-sm mb-1' title='編輯'><i class='fas fa-edit'></i></a>
+                                    <a href='?del={$row['petID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除此寵物資料？\")' title='刪除'><i class='fas fa-trash'></i></a>
                                 </td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='8' class='text-center p-5 text-muted'>查無資料</td></tr>";
+                    echo "<tr><td colspan='8' class='text-center p-5 text-muted'>
+                            <i class='fas fa-box-open fa-3x mb-3'></i><br>查無符合條件的資料
+                          </td></tr>";
                 }
                 ?>
             </tbody>
