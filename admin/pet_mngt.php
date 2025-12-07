@@ -13,6 +13,16 @@ if (isset($_POST['add_specie'])) {
         }
     }
 }
+if (isset($_GET['del_specie'])) {
+    $id = intval($_GET['del_specie']); // 轉成整數防注入
+    $sql = "DELETE FROM SPECIE WHERE sID = $id";
+    if ($conn->query($sql)) {
+        echo "<script>alert('物種刪除成功！'); window.location.href='pet_mngt.php';</script>";
+    } else {
+        // 捕捉 Foreign Key 錯誤 (例如還有品種屬於這個物種)
+        echo "<script>alert('刪除失敗！\\n可能原因：該物種下還有品種資料，請先清空品種。'); window.location.href='pet_mngt.php';</script>";
+    }
+}
 
 // 新增品種
 if (isset($_POST['add_breed'])) {
@@ -24,6 +34,16 @@ if (isset($_POST['add_breed'])) {
         if ($stmt->execute()) {
             echo "<script>alert('品種新增成功！'); window.location.href='pet_mngt.php';</script>";
         }
+    }
+}
+if (isset($_GET['del_breed'])) {
+    $id = intval($_GET['del_breed']);
+    $sql = "DELETE FROM BREED WHERE bID = $id";
+    if ($conn->query($sql)) {
+        echo "<script>alert('品種刪除成功！'); window.location.href='pet_mngt.php';</script>";
+    } else {
+        // 捕捉 Foreign Key 錯誤 (例如還有寵物是這個品種)
+        echo "<script>alert('刪除失敗！\\n可能原因：還有寵物屬於此品種，請先刪除寵物或修改其品種。'); window.location.href='pet_mngt.php';</script>";
     }
 }
 
