@@ -126,3 +126,18 @@ ALTER TABLE PET ADD COLUMN petImage VARCHAR(255) DEFAULT NULL;
 ALTER TABLE PRODUCT ADD COLUMN pImage VARCHAR(255) DEFAULT NULL;
 
 ALTER TABLE STORE ADD COLUMN storeImage VARCHAR(255) DEFAULT NULL;
+
+
+
+-- 建立完整的訂單表 (包含商品名稱和取貨時間)
+CREATE TABLE `ORDERS` (
+  `orderID` int(11) NOT NULL AUTO_INCREMENT,
+  `customerName` varchar(50) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `totalAmount` int(11) NOT NULL,
+  `deliveryMethod` varchar(20) DEFAULT '店面自取',
+  `pickupTime` datetime DEFAULT NULL,
+  `productName` varchar(100) DEFAULT NULL,
+  `orderDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`orderID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
