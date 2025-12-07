@@ -24,17 +24,21 @@ if (isset($_POST['save'])) {
     // 預設圖片路徑 (如果是新增=空; 如果是修改=舊路徑)
     $imagePath = $_POST['old_image'] ?? '';
 
-    // --- 圖片上傳邏輯 ---
+    // --- 圖片上傳邏輯 (修正路徑) ---
     if (isset($_FILES['pImage']) && $_FILES['pImage']['error'] === 0) {
-        $uploadDir = 'uploads/';
+        // 修改這裡：存到 admin 外面的 uploads 資料夾
+        $uploadDir = '../uploads/'; 
+        
+        // 檢查資料夾是否存在，不存在就建立
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
+        
         $fileName = time() . '_' . basename($_FILES['pImage']['name']);
         $targetFile = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['pImage']['tmp_name'], $targetFile)) {
-            $imagePath = $targetFile; // 若上傳成功，更新路徑
+            $imagePath = $targetFile; // 存入資料庫的路徑 (例如: ../uploads/17000.jpg)
         }
     }
 
@@ -45,7 +49,8 @@ if (isset($_POST['save'])) {
         $sql = "UPDATE PRODUCT SET pName='$pName', storeID='$storeID', stock='$stock', pImage='$imagePath' WHERE pID=$id";
         $msg = "修改成功！";
     } else {
-        // [新增 Insert]
+        // [新增 Insert] 
+        // 修正重點：這裡原本寫錯成 storeImage，已改為 pImage
         $sql = "INSERT INTO PRODUCT (pName, storeID, stock, pImage) 
                 VALUES ('$pName', '$storeID', '$stock', '$imagePath')";
         $msg = "新增成功！";
@@ -55,7 +60,8 @@ if (isset($_POST['save'])) {
         echo "<script>alert('$msg'); window.location.href='product_mngt.php';</script>";
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        // 顯示錯誤訊息，方便除錯
+        echo "SQL Error: " . $conn->error;
     }
 }
 
@@ -68,14 +74,12 @@ if (isset($_GET['del'])) {
 
 // --- 處理搜尋邏輯 ---
 $searchKeyword = '';
-// 預設 SQL：查詢所有商品並 JOIN 商店名稱
 $sql_query = "SELECT P.*, S.storeName 
               FROM PRODUCT P 
               JOIN STORE S ON P.storeID = S.storeID";
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchKeyword = $_GET['search'];
-    // 搜尋條件：商品名稱 或 分店名稱
     $sql_query .= " WHERE P.pName LIKE '%$searchKeyword%' OR S.storeName LIKE '%$searchKeyword%'";
 }
 
@@ -185,18 +189,16 @@ $sql_query .= " ORDER BY P.pID ASC";
             </thead>
             <tbody>
                 <?php
-                // 執行搜尋 SQL
                 $res = $conn->query($sql_query);
                 
                 if ($res->num_rows > 0) {
                     while ($row = $res->fetch_assoc()) {
-                        // 圖片顯示邏輯
                         $imgHtml = "<span class='text-muted small'>無圖片</span>";
                         if (!empty($row['pImage'])) {
+                            // 修正顯示圖片的 CSS
                             $imgHtml = "<img src='{$row['pImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
                         }
 
-                        // 搜尋關鍵字高亮 (UX 優化)
                         $showPName = $row['pName'];
                         $showStore = $row['storeName'];
                         if (!empty($searchKeyword)) {

@@ -8,20 +8,21 @@
 <body class="bg-light">
     <?php include '../nav_client.php'; ?>
     <div class="container">
-        <h3>  商品列表</h3>
+        <h3> 商品列表</h3>
         <div class="row">
             <?php
             $res = $conn->query("SELECT * FROM PRODUCT");
             while($row = $res->fetch_assoc()){
-                // --- 修改重點 ---
-                // 使用 isset() 檢查資料庫是否有 pImage 欄位，且內容不為空
+                
+               
                 if (isset($row['pImage']) && !empty($row['pImage'])) {
-                    $img = "../../" . $row['pImage'];
+                   
+                    $img = "../" . $row['pImage'];
                 } else {
-                    // 如果沒欄位或沒圖片，顯示預設圖
                     $img = "https://via.placeholder.com/300?text=No+Image";
                 }
-               
+                // --- 修改重點結束 ---
+                
                 echo "<div class='col-md-3 mb-4'>
                         <div class='card border-0 shadow-sm'>
                             <img src='$img' class='card-img-top' style='height:200px;object-fit:cover;'>

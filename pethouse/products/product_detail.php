@@ -19,7 +19,7 @@ $product = $conn->query($sql)->fetch_assoc();
         <div class="card p-5 border-0 shadow-sm">
             <div class="row">
                 <div class="col-md-5">
-                     <img src="<?php echo !empty($product['pImage']) ? '../../'.$product['pImage'] : 'https://via.placeholder.com/400'; ?>" class="img-fluid rounded shadow-sm">
+                     <img src="<?php echo !empty($product['pImage']) ? '../'.$product['pImage'] : 'https://via.placeholder.com/400'; ?>" class="img-fluid rounded shadow-sm">
                 </div>
                 
                 <div class="col-md-7">
