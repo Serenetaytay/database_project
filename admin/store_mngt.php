@@ -83,29 +83,68 @@ if (isset($_POST['save'])) {
                 VALUES ('$name', '$addr', '$tel', '$time', '$imagePath')";
         $msg = "新增成功！";
     }
-
     if ($conn->query($sql)) {
-        echo "<script>alert('$msg'); location.href='store_mngt.php';</script>";
+        // ★ SweetAlert2 成功提示與跳轉
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: '成功',
+                    text: '$msg',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href='store_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
+        exit();
     } else {
-        echo "Error: " . $conn->error;
+        echo "SQL Error: " . $conn->error;
     }
 }
 
 // --- C. 刪除邏輯 ---
 if (isset($_GET['del'])) {
     $id = intval($_GET['del']);
-    // 使用 try-catch 避免刪除失敗時報錯
     try {
         if ($conn->query("DELETE FROM STORE WHERE storeID=$id")) {
-            echo "<script>alert('刪除成功！'); location.href='store_mngt.php';</script>";
+            // ★ 修改處：刪除成功後直接重新導向，不顯示動畫 (與商品/預約頁面一致)
+            header("Location: store_mngt.php");
+            exit;
         } else {
             throw new Exception($conn->error);
         }
     } catch (Exception $e) {
-        echo "<script>
-                alert('無法刪除！\\n可能原因：該分店底下還有商品或寵物資料。\\n請先清空該店關聯資料。'); 
-                location.href='store_mngt.php';
-              </script>";
+        // 錯誤狀況保留彈窗提示 (例如因為有關聯資料無法刪除)
+        $errorMsg = "無法刪除！可能原因：該分店底下還有關聯資料。";
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: '刪除失敗',
+                    text: '$errorMsg',
+                    confirmButtonText: '確定'
+                }).then(() => {
+                    window.location.href='store_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
+        exit;
     }
 }
 ?>
@@ -117,73 +156,105 @@ if (isset($_GET['del'])) {
     <title>商店管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    // ★ SweetAlert2 刪除確認函式
+    function confirmDelete(url) {
+        event.preventDefault();
+        Swal.fire({
+            title: '確定要刪除這間分店嗎？',
+            text: "刪除後無法復原！",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '刪除',
+            cancelButtonText: '取消'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        })
+    }
+    </script>
+    <style>
+        .btn-dark-custom {
+            background-color: #212529;
+            color: white;
+            border-color: #212529;
+        }
+        .btn-dark-custom:hover {
+            background-color: #424649;
+            border-color: #373b3e;
+            color: white;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <?php include 'navbar.php'; ?>
     
     <div class="container mt-4">
-        <h3 class="fw-bold mb-4">  商店資訊管理</h3>
-        
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 text-primary">
-                    <i class="fas fa-edit me-2"></i><?php echo $editData ? '編輯分店' : '新增分店'; ?>
-                </h5>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" class="row g-3">
-                    <input type="hidden" name="storeID" value="<?php echo $editData['storeID'] ?? ''; ?>">
-                    <input type="hidden" name="old_image" value="<?php echo $editData['storeImage'] ?? ''; ?>">
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">分店名稱</label>
-                        <input type="text" name="storeName" class="form-control" placeholder="例：台北信義店" required 
-                               value="<?php echo $editData['storeName'] ?? ''; ?>">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">電話</label>
-                        <input type="text" name="Phone" class="form-control" required 
-                               value="<?php echo $editData['Phone'] ?? ''; ?>">
-                    </div>
+        <h3>商店資訊管理</h3>
+        <form method="post" enctype="multipart/form-data" class="card p-4 mb-4 bg-white shadow-sm border-secondary-subtle">
+            <h5 class="text-secondary mb-3">
+                <?php echo $editData ? '編輯分店資料' : '新增分店'; ?>
+            </h5>
+            
+            <input type="hidden" name="storeID" value="<?php echo $editData['storeID'] ?? ''; ?>">
+            <input type="hidden" name="old_image" value="<?php echo $editData['storeImage'] ?? ''; ?>">
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">分店名稱</label>
+                    <input type="text" name="storeName" class="form-control" placeholder="例：台北信義店" required 
+                           value="<?php echo $editData['storeName'] ?? ''; ?>">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">電話</label>
+                    <input type="text" name="Phone" class="form-control" required 
+                           value="<?php echo $editData['Phone'] ?? ''; ?>">
+                </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">營業時間</label>
-                        <div class="input-group">
-                            <span class="input-group-text">從</span>
-                            <input type="time" name="open_time" class="form-control" required 
-                                   value="<?php echo $open_default; ?>">
-                            <span class="input-group-text">到</span>
-                            <input type="time" name="close_time" class="form-control" required 
-                                   value="<?php echo $close_default; ?>">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">營業時間</label>
+                    <div class="input-group">
+                        <span class="input-group-text">從</span>
+                        <input type="time" name="open_time" class="form-control" required 
+                               value="<?php echo $open_default; ?>">
+                        <span class="input-group-text">到</span>
+                        <input type="time" name="close_time" class="form-control" required 
+                               value="<?php echo $close_default; ?>">
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">地址</label>
+                    <input type="text" name="address" class="form-control" required 
+                           value="<?php echo $editData['address'] ?? ''; ?>">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">門市照片</label>
+                    <input type="file" name="storeImage" class="form-control">
+                    <?php if(!empty($editData['storeImage'])): ?>
+                        <div class="mt-2 text-muted small">
+                            目前圖片：<br>
+                            <img src="<?php echo $editData['storeImage']; ?>" style="height: 60px; border-radius: 5px; border: 1px solid #ddd;">
                         </div>
-                    </div>
-
-                    <div class="col-md-8">
-                        <label class="form-label fw-bold">地址</label>
-                        <input type="text" name="address" class="form-control" required 
-                               value="<?php echo $editData['address'] ?? ''; ?>">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">門市照片</label>
-                        <input type="file" name="storeImage" class="form-control">
-                        <?php if(!empty($editData['storeImage'])): ?>
-                            <div class="mt-2 text-muted small">
-                                目前圖片：<a href="<?php echo $editData['storeImage']; ?>" target="_blank">查看</a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="col-12 text-end">
-                        <?php if($editData): ?>
-                            <a href="store_mngt.php" class="btn btn-secondary me-2">取消編輯</a>
-                        <?php endif; ?>
-                        <button type="submit" name="save" class="btn btn-primary px-4">儲存設定</button>
-                    </div>
-                </form>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
+                        <?php echo $editData ? '確認修改' : '新增分店'; ?>
+                    </button>
+                    <?php if($editData): ?>
+                        <a href="store_mngt.php" class="btn btn-secondary w-100 mt-2">取消編輯</a>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
+        </form>
 
         <div class="card shadow-sm border-0">
             <div class="card-header bg-dark text-white py-3">
@@ -217,8 +288,8 @@ if (isset($_GET['del'])) {
                                     </td>
                                     <td><span class='badge bg-info text-dark'>{$row['worktime']}</span></td>
                                     <td class='text-end'>
-                                        <a href='?edit={$row['storeID']}' class='btn btn-sm btn-warning me-1'><i class='fas fa-edit'></i> 編輯</a>
-                                        <a href='?del={$row['storeID']}' class='btn btn-sm btn-danger' onclick='return confirm(\"確定要刪除嗎？\");'><i class='fas fa-trash-alt'></i> 刪除</a>
+                                        <a href='?edit={$row['storeID']}' class='btn btn-sm btn-warning me-1'><i class='fas fa-edit'></i></a>
+                                        <a href='?del={$row['storeID']}' class='btn btn-danger btn-sm' onclick='confirmDelete(this.href)'><i class='fas fa-trash'></i></a>
                                     </td>
                                 </tr>";
                             }

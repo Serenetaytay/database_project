@@ -1,21 +1,27 @@
 <?php
 session_start();
-// 檢查是否有登入 Session，沒有就踢回 login.php
+// 檢查是否有登入 Session
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     header("Location: login.php");
     exit();
 }
 include 'db_connect.php';
 
-// --- 編輯模式：讀取舊資料 ---
+// ==========================================
+//  1. 編輯模式：讀取舊資料
+// ==========================================
 $editData = null;
 if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
+    $id = intval($_GET['edit']); // 安全轉型
     $result = $conn->query("SELECT * FROM PRODUCT WHERE pID = $id");
-    $editData = $result->fetch_assoc();
+    if ($result) {
+        $editData = $result->fetch_assoc();
+    }
 }
 
-// --- 處理資料儲存 (新增 或 修改) ---
+// ==========================================
+//  2. 處理資料儲存 (新增 或 修改)
+// ==========================================
 if (isset($_POST['save'])) {
     $pName = $_POST['pName'];
     $storeID = $_POST['storeID'];
@@ -24,12 +30,9 @@ if (isset($_POST['save'])) {
     // 預設圖片路徑 (如果是新增=空; 如果是修改=舊路徑)
     $imagePath = $_POST['old_image'] ?? '';
 
-    // --- 圖片上傳邏輯 (修正路徑) ---
+    // --- 圖片上傳邏輯 ---
     if (isset($_FILES['pImage']) && $_FILES['pImage']['error'] === 0) {
-        // 修改這裡：存到 admin 外面的 uploads 資料夾
         $uploadDir = '../uploads/'; 
-        
-        // 檢查資料夾是否存在，不存在就建立
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -38,7 +41,7 @@ if (isset($_POST['save'])) {
         $targetFile = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['pImage']['tmp_name'], $targetFile)) {
-            $imagePath = $targetFile; // 存入資料庫的路徑 (例如: ../uploads/17000.jpg)
+            $imagePath = $targetFile;
         }
     }
 
@@ -50,29 +53,52 @@ if (isset($_POST['save'])) {
         $msg = "修改成功！";
     } else {
         // [新增 Insert] 
-        // 修正重點：這裡原本寫錯成 storeImage，已改為 pImage
         $sql = "INSERT INTO PRODUCT (pName, storeID, stock, pImage) 
                 VALUES ('$pName', '$storeID', '$stock', '$imagePath')";
         $msg = "新增成功！";
     }
     
     if ($conn->query($sql)) {
-        echo "<script>alert('$msg'); window.location.href='product_mngt.php';</script>";
+        // ★ SweetAlert2 成功提示與跳轉
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: '成功',
+                    text: '$msg',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href='product_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
         exit();
     } else {
-        // 顯示錯誤訊息，方便除錯
         echo "SQL Error: " . $conn->error;
     }
 }
 
-// --- 處理刪除 ---
+// ==========================================
+//  3. 處理刪除
+// ==========================================
 if (isset($_GET['del'])) {
-    $conn->query("DELETE FROM PRODUCT WHERE pID={$_GET['del']}");
+    $id = intval($_GET['del']);
+    $conn->query("DELETE FROM PRODUCT WHERE pID=$id");
     header("Location: product_mngt.php");
     exit();
 }
 
-// --- 處理搜尋邏輯 ---
+// ==========================================
+//  4. 處理搜尋邏輯
+// ==========================================
 $searchKeyword = '';
 $sql_query = "SELECT P.*, S.storeName 
               FROM PRODUCT P 
@@ -80,17 +106,45 @@ $sql_query = "SELECT P.*, S.storeName
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchKeyword = $_GET['search'];
-    $sql_query .= " WHERE P.pName LIKE '%$searchKeyword%' OR S.storeName LIKE '%$searchKeyword%'";
+    // 簡單防注入
+    $safeKey = $conn->real_escape_string($searchKeyword);
+    $sql_query .= " WHERE P.pName LIKE '%$safeKey%' OR S.storeName LIKE '%$safeKey%'";
 }
 
 $sql_query .= " ORDER BY P.pID ASC";
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
+    <meta charset="UTF-8">
+    <title>商品管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+    // ★ SweetAlert2 刪除確認函式
+    function confirmDelete(url) {
+        event.preventDefault();
+        Swal.fire({
+            title: '確定刪除此商品？',
+            text: "刪除後無法復原！",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '刪除',
+            cancelButtonText: '取消'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        })
+    }
+    </script>
+
     <style>
         .btn-dark-custom {
             background-color: #212529;
@@ -191,11 +245,10 @@ $sql_query .= " ORDER BY P.pID ASC";
                 <?php
                 $res = $conn->query($sql_query);
                 
-                if ($res->num_rows > 0) {
+                if ($res && $res->num_rows > 0) {
                     while ($row = $res->fetch_assoc()) {
                         $imgHtml = "<span class='text-muted small'>無圖片</span>";
                         if (!empty($row['pImage'])) {
-                            // 修正顯示圖片的 CSS
                             $imgHtml = "<img src='{$row['pImage']}' style='width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;'>";
                         }
 
@@ -214,7 +267,7 @@ $sql_query .= " ORDER BY P.pID ASC";
                                 <td>{$row['stock']}</td>
                                 <td>
                                     <a href='?edit={$row['pID']}' class='btn btn-warning btn-sm mb-1'><i class='fas fa-edit'></i></a>
-                                    <a href='?del={$row['pID']}' class='btn btn-danger btn-sm mb-1' onclick='return confirm(\"確認刪除？\")'><i class='fas fa-trash'></i></a>
+                                    <a href='?del={$row['pID']}' class='btn btn-danger btn-sm mb-1' onclick='confirmDelete(this.href)'><i class='fas fa-trash'></i></a>
                                 </td>
                               </tr>";
                     }
