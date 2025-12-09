@@ -21,17 +21,17 @@ if (isset($_POST['save'])) {
     $rName = $_POST['rName'];
     $rPhone = $_POST['rPhone'];
     $time = $_POST['time'];
+    $status = $_POST['status'];
     
     if (!empty($_POST['rID'])) {
         // [修改 Update]
         $id = $_POST['rID'];
-        // 注意：這裡只修改預約資訊，不處理狀態改變 (狀態由確認按鈕處理)
-        $sql = "UPDATE reserve SET petID='$petID', rName='$rName', rPhone='$rPhone', time='$time' WHERE rID=$id";
+        $sql = "UPDATE reserve SET petID='$petID', rName='$rName', rPhone='$rPhone', time='$time', status='$status' WHERE rID=$id";
         $msg = "預約資料修改成功！";
     } else {
         // [新增 Insert]
         $sql = "INSERT INTO reserve (petID, rName, rPhone, time, status) 
-                VALUES ('$petID', '$rName', '$rPhone', '$time', '待確認')";
+                VALUES ('$petID', '$rName', '$rPhone', '$time', '$status')";
         $msg = "新增預約成功！";
     }
 
@@ -184,6 +184,15 @@ $sql_query .= " ORDER BY reserve.time DESC";
                     <input type="datetime-local" name="time" class="form-control" required
                            value="<?php echo $timeValue; ?>">
                 </div>
+                <div class="col-md-2">
+                    <label class="col-form-label fw-bold">狀態</label>
+                    <select name="status" class="form-select border-primary">
+                        <option value="申請購買" <?php echo ($editData && $editData['status']=='申請購買') ? 'selected' : ''; ?>>申請購買</option>
+                        <option value="已確認" <?php echo ($editData && $editData['status']=='已確認') ? 'selected' : ''; ?>>已確認</option>
+                        <option value="已完成" <?php echo ($editData && $editData['status']=='已完成') ? 'selected' : ''; ?>>已完成</option>
+                        <option value="已取消" <?php echo ($editData && $editData['status']=='已取消') ? 'selected' : ''; ?>>已取消</option>
+                    </select>
+                </div>
                 <div class="col-12">
                     <button type="submit" name="save" class="btn <?php echo $editData ? 'btn-dark-custom' : 'btn-dark-custom'; ?> w-100">
                         <?php echo $editData ? '確認修改' : '新增預約'; ?>
@@ -216,15 +225,6 @@ $sql_query .= " ORDER BY reserve.time DESC";
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         $statusClass = ($row['status']=='已確認') ? 'text-success fw-bold' : 'text-danger';
-                        
-                        // 產生確認按鈕 (僅待確認時顯示)
-                        $confirmBtn = "";
-                        if ($row['status'] == '待確認') {
-                            $confirmBtn = "<a href='?confirm={$row['rID']}&petID={$row['petID']}' class='btn btn-outline-success btn-sm' title='確認並鎖定寵物'><i class='fas fa-check'></i> 確認</a>";
-                        } else {
-                            $confirmBtn = "<span class='badge bg-secondary'>已處理</span>";
-                        }
-
                         // 處理搜尋關鍵字高亮
                         $showName = $row['rName'];
                         $showPhone = $row['rPhone'];
@@ -245,7 +245,6 @@ $sql_query .= " ORDER BY reserve.time DESC";
                                 <td>{$row['time']}</td>
                                 <td class='$statusClass'>{$row['status']}</td>
                                 <td>
-                                    $confirmBtn
                                     <a href='?edit={$row['rID']}' class='btn btn-warning btn-sm'><i class='fas fa-edit'></i></a>
                                     <a href='?del={$row['rID']}' class='btn btn-danger btn-sm' onclick='return confirm(\"確定刪除此預約？\")'><i class='fas fa-trash'></i></a>
                                 </td>
