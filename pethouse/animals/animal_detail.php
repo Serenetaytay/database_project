@@ -28,6 +28,8 @@ if ($result->num_rows > 0) {
     echo "<div class='container mt-5 alert alert-danger'>查無此寵物資料。</div>";
     exit;
 }
+$dbImage = $pet['petImage'];
+$imgSrc = !empty($dbImage) ? '../../'.htmlspecialchars($dbImage) : 'https://via.placeholder.com/500?text=No+Image';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -36,11 +38,26 @@ if ($result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pet['bName']); ?> - 詳細資料</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        /* 設定圖片區塊樣式 */
+        .pet-detail-img-container {
+            overflow: hidden;
+            border-radius: 8px;
+        }
         .pet-detail-img {
-            max-height: 400px;
-            object-fit: cover;
+            max-height: 450px;
+            object-fit: cover; /* 保持比例填滿 */
             width: 100%;
+            transition: transform 0.3s ease;
+        }
+        /* 滑鼠移過去時的放大鏡游標與微放大效果 */
+        .zoom-trigger:hover .pet-detail-img {
+            transform: scale(1.03);
+        }
+        .zoom-trigger {
+            cursor: zoom-in;
+            display: block;
         }
     </style>
 </head>
@@ -51,10 +68,15 @@ if ($result->num_rows > 0) {
     <div class="container mt-5 mb-5">
         <div class="card border-0 shadow-lg overflow-hidden">
             <div class="row g-0">
-                <div class="col-md-6">
-                    <img src="<?php echo !empty($pet['petImage']) ? '../../'.htmlspecialchars($pet['petImage']) : 'https://via.placeholder.com/500?text=No+Image'; ?>" 
-                         class="img-fluid pet-detail-img" 
-                         alt="<?php echo htmlspecialchars($pet['bName']); ?>">
+                
+                <div class="col-md-6 bg-white d-flex align-items-center justify-content-center p-3">
+                    <a href="#" class="zoom-trigger w-100" data-bs-toggle="modal" data-bs-target="#imageModal" title="點擊放大圖片">
+                        <div class="pet-detail-img-container">
+                            <img src="<?php echo $imgSrc; ?>" 
+                                 class="img-fluid pet-detail-img" 
+                                 alt="<?php echo htmlspecialchars($pet['bName']); ?>">
+                        </div>
+                    </a>
                 </div>
                 
                 <div class="col-md-6">
@@ -85,13 +107,26 @@ if ($result->num_rows > 0) {
 
                         <div class="d-grid gap-2">
                             <a href="reserve_pet.php?pet_id=<?php echo $pet['petID']; ?>" class="btn btn-danger btn-lg shadow-sm">
-                                <i class="bi bi-cart-check"></i> 預約購買 (帶回家)
+                                <i class="bi bi-cart-check"></i> 預約服務
                             </a>
                             <a href="javascript:history.back()" class="btn btn-outline-secondary">
                                 返回上一頁
                             </a>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-header border-0">
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <img src="<?php echo $imgSrc; ?>" class="img-fluid rounded shadow-lg" style="max-height: 85vh;">
                 </div>
             </div>
         </div>

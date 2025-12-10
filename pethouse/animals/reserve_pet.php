@@ -12,7 +12,7 @@ if (isset($_POST['submit'])) {
     <?php include '../nav_client.php'; ?>
     <div class="container mt-5" style="max-width:500px">
         <div class="card p-4 shadow-sm">
-            <h3>  申請購買</h3>
+            <h3>申請預約</h3>
             <form method="post">
                 <div class="mb-3"><label>姓名</label><input type="text" name="rName" class="form-control" required></div>
                 <div class="mb-3"><label>電話</label><input type="text" name="rPhone" class="form-control" required></div>
