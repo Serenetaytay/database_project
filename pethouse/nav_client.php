@@ -14,10 +14,10 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/database_project/pethouse/animals/index.php">  找寵物</a>
+                    <a class="nav-link" href="/database_project/pethouse/animals/index.php">  逛逛寵物區</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/database_project/pethouse/products/index.php">  找商品</a>
+                    <a class="nav-link" href="/database_project/pethouse/products/index.php">  逛逛商品區</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/database_project/pethouse/store/index.php">  店家資訊</a>
