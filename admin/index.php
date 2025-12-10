@@ -132,12 +132,35 @@ $json_pie_data   = json_encode($pie_data);
                     <div class="card-body text-primary d-flex flex-column justify-content-center text-center">
                         <h5 class="card-title mb-4"><i class="fas fa-crown me-2"></i>鎮店之寶</h5>
                         <?php
-                        $sql = "SELECT MAX(petprice) as max_price FROM PET WHERE status='在店'";
-                        $res = $conn->query($sql)->fetch_assoc();
-                        $max = $res['max_price'] ? $res['max_price'] : 0;
+                        $sql_max = "SELECT MAX(petprice) as max_price FROM PET WHERE status='在店'";
+                        $res_max = $conn->query($sql_max)->fetch_assoc();
+                        $max_price = $res_max['max_price'] ? $res['max_price'] : 0;
+                        
+                        $info_html = "目前無在店寵物";
+
+                        if ($max_price > 0) {
+                            $sql_list = "SELECT P.petID, P.storeID, B.bName 
+                                         FROM PET P 
+                                         LEFT JOIN BREED B ON P.bID = B.bID 
+                                         WHERE P.status='在店' AND P.petprice = $max_price";
+                            $res_list = $conn->query($sql_list);
+                            
+                            $pets = [];
+                            if ($res_list && $res_list->num_rows > 0) {
+                                while ($row = $res_list->fetch_assoc()) {
+                                    $visualID = $row['storeID'] . "-" . str_pad($row['petID'], 3, '0', STR_PAD_LEFT);
+                                    
+                                    $pets[] = "<span class='badge bg-primary text-white me-1'>{$visualID}</span>{$row['bName']}";
+                                }
+                                $info_html = implode("<div class='mb-1'></div>", $pets);
+                            }
+                        }
                         ?>
-                        <h1 class="display-3 fw-bold mb-3">$<?php echo number_format($max); ?></h1>
-                        <p class="text-muted">目前最貴寵物</p>
+                        <h1 class="display-3 fw-bold mb-3">$<?php echo number_format($max_price); ?></h1>
+                        
+                        <div class="text-muted fw-bold" style="max-height: 120px; overflow-y: auto;">
+                            <?php echo $info_html; ?>
+                        </div>
                     </div>
                 </div>
             </div>
