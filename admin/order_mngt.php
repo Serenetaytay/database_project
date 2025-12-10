@@ -1,7 +1,6 @@
 <?php
 include 'db_connect.php';
-
-// (選做) 如果你想做「刪除訂單」功能
+// --- 刪除訂單 ---
 if (isset($_GET['del'])) {
     $conn->query("DELETE FROM ORDERS WHERE orderID={$_GET['del']}");
     header("Location: order_mngt.php");

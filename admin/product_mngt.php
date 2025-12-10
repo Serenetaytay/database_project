@@ -7,9 +7,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 include 'db_connect.php';
 
-// ==========================================
-//  1. 編輯模式：讀取舊資料
-// ==========================================
+// 編輯模式：讀取舊資料
 $editData = null;
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']); // 安全轉型
@@ -19,9 +17,7 @@ if (isset($_GET['edit'])) {
     }
 }
 
-// ==========================================
-//  2. 處理資料儲存 (新增 或 修改)
-// ==========================================
+// 新增 / 修改
 if (isset($_POST['save'])) {
     $pName = $_POST['pName'];
     $storeID = $_POST['storeID'];
@@ -86,9 +82,7 @@ if (isset($_POST['save'])) {
     }
 }
 
-// ==========================================
-//  3. 處理刪除
-// ==========================================
+// 刪除
 if (isset($_GET['del'])) {
     $id = intval($_GET['del']);
     $conn->query("DELETE FROM PRODUCT WHERE pID=$id");
@@ -96,9 +90,7 @@ if (isset($_GET['del'])) {
     exit();
 }
 
-// ==========================================
-//  4. 處理搜尋邏輯
-// ==========================================
+// 搜尋
 $searchKeyword = '';
 $sql_query = "SELECT P.*, S.storeName 
               FROM PRODUCT P 
@@ -106,7 +98,6 @@ $sql_query = "SELECT P.*, S.storeName
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchKeyword = $_GET['search'];
-    // 簡單防注入
     $safeKey = $conn->real_escape_string($searchKeyword);
     $sql_query .= " WHERE P.pName LIKE '%$safeKey%' OR S.storeName LIKE '%$safeKey%'";
 }

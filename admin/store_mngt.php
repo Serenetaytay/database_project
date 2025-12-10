@@ -1,6 +1,6 @@
 <?php
 session_start();
-// 1. 檢查管理員權限
+// 檢查是否有登入 Session
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     header("Location: login.php");
     exit();
@@ -12,7 +12,7 @@ $editData = null;
 $open_default = '';  
 $close_default = '';
 
-// --- A. 編輯模式：讀取舊資料 ---
+// --- 編輯模式：讀取舊資料 ---
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']); // 轉成數字防呆
     $result = $conn->query("SELECT * FROM STORE WHERE storeID = $id");
@@ -27,8 +27,8 @@ if (isset($_GET['edit'])) {
             
             // 確保拆出來有兩個時間才填入
             if (count($times) >= 2) {
-                $open_default = $times[0];  // 09:00
-                $close_default = $times[1]; // 18:00
+                $open_default = $times[0]; 
+                $close_default = $times[1];
             } else {
                 // 如果舊格式不對，至少把前面的填進去，避免全空
                 $open_default = $editData['worktime'];
@@ -37,20 +37,19 @@ if (isset($_GET['edit'])) {
     }
 }
 
-// --- B. 資料儲存 (新增 或 修改) ---
+// --- 新增 / 修改 ---
 if (isset($_POST['save'])) {
-    // 1. 接收表單資料 (加上 real_escape_string 防止資料庫錯誤)
+    // 接收表單資料 (加上 real_escape_string 防止資料庫錯誤)
     $name = $conn->real_escape_string($_POST['storeName']);
     $addr = $conn->real_escape_string($_POST['address']);
     $tel  = $conn->real_escape_string($_POST['Phone']);
     
-    // 2. 處理時間：把兩個時間欄位接起來
-    // 結果會變成 "09:00 - 18:00"
+    // 處理時間：把兩個時間欄位接起來
     $open = $_POST['open_time'];
     $close = $_POST['close_time'];
     $time = $conn->real_escape_string($open . ' - ' . $close);
 
-    // 3. 處理圖片上傳
+    // 處理圖片上傳
     $imagePath = $_POST['old_image'] ?? ''; // 預設用舊圖
     
     if (isset($_FILES['storeImage']) && $_FILES['storeImage']['error'] === 0) {
@@ -65,7 +64,7 @@ if (isset($_POST['save'])) {
         }
     }
 
-    // 4. 判斷是 Update 還是 Insert
+    // 判斷是 Update 還是 Insert
     if (!empty($_POST['storeID'])) {
         // [修改]
         $id = intval($_POST['storeID']);
@@ -111,12 +110,11 @@ if (isset($_POST['save'])) {
     }
 }
 
-// --- C. 刪除邏輯 ---
+// --- 刪除 ---
 if (isset($_GET['del'])) {
     $id = intval($_GET['del']);
     try {
         if ($conn->query("DELETE FROM STORE WHERE storeID=$id")) {
-            // ★ 修改處：刪除成功後直接重新導向，不顯示動畫 (與商品/預約頁面一致)
             header("Location: store_mngt.php");
             exit;
         } else {

@@ -7,9 +7,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 include 'db_connect.php';
 
-// ==========================================
-//  1. 編輯模式：讀取舊資料
-// ==========================================
+// 編輯
 $editData = null;
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']); // 安全轉型
@@ -20,9 +18,7 @@ if (isset($_GET['edit'])) {
     $editData = $res->fetch_assoc();
 }
 
-// ==========================================
-//  2. 處理資料儲存 (新增 或 修改)
-// ==========================================
+// 新增 / 修改
 if (isset($_POST['save'])) {
     $petID = $_POST['petID'];
     $rName = $_POST['rName'];
@@ -43,7 +39,6 @@ if (isset($_POST['save'])) {
     }
 
     if ($conn->query($sql) === TRUE) {
-        // ★ 修正：輸出完整 HTML 頁面來顯示 SweetAlert2，然後跳轉
         echo "<!DOCTYPE html>
         <html lang='zh-TW'>
         <head>
@@ -70,9 +65,7 @@ if (isset($_POST['save'])) {
     }
 }
 
-// ==========================================
-//  3. 處理刪除
-// ==========================================
+// 刪除
 if (isset($_GET['del'])) {
     $id = intval($_GET['del']);
     $conn->query("DELETE FROM reserve WHERE rID=$id");
@@ -80,9 +73,7 @@ if (isset($_GET['del'])) {
     exit;
 }
 
-// ==========================================
-//  4. 處理搜尋與查詢 SQL
-// ==========================================
+// 搜尋與查詢 SQL
 $searchKeyword = '';
 
 $sql_query = "SELECT reserve.*, pet.petID, breed.bName, store.storeName 
@@ -94,7 +85,6 @@ $sql_query = "SELECT reserve.*, pet.petID, breed.bName, store.storeName
 
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $searchKeyword = $_GET['search'];
-    // 簡單防注入
     $safeKey = $conn->real_escape_string($searchKeyword);
     $sql_query .= " AND (reserve.rName LIKE '%$safeKey%' 
                      OR reserve.rPhone LIKE '%$safeKey%'
@@ -188,7 +178,6 @@ $result = $conn->query($sql_query);
                             <select name="petID" class="form-select" required>
                                 <option value="">請選擇...</option>
                                 <?php
-                                // 撈取寵物：顯示「在店」的，或者「目前編輯選中」的那一隻
                                 $p_sql = "SELECT pet.petID, breed.bName, store.storeName, pet.status 
                                           FROM pet 
                                           JOIN breed ON pet.bID = breed.bID 
@@ -271,8 +260,7 @@ $result = $conn->query($sql_query);
                             if ($row['status'] == '申請購買' || $row['status'] == '待確認') $statusColor = 'text-danger fw-bold';
                             if ($row['status'] == '已確認') $statusColor = 'text-success fw-bold'; 
                             if ($row['status'] == '已完成') $statusColor = 'text-primary fw-bold'; 
-
-                            // 處理搜尋關鍵字高亮
+                            
                             $showName = $row['rName'];
                             $showPhone = $row['rPhone'];
                             if (!empty($searchKeyword)) {

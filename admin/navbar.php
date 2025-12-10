@@ -13,7 +13,7 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link" href="pet_mngt.php">寵物列表管理</a></li>
-                <li class="nav-item"><a class="nav-link" href="product_mngt.php">商品管理</a></li>
+                <li class="nav-item"><a class="nav-link" href="product_mngt.php">商品列表管理</a></li>
                 <li class="nav-item"><a class="nav-link" href="reserve_mngt.php">客戶預約資訊</a></li>
                 <li class="nav-item"><a class="nav-link" href="order_mngt.php">商品訂單</a></li>
                 <li class="nav-item"><a class="nav-link" href="store_mngt.php">商店資訊管理</a></li>

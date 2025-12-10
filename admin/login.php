@@ -11,9 +11,9 @@ if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true) {
 if (isset($_POST['submit'])) {
     $password = $_POST['password'];
     
-    // --- 這裡設定你的密碼，目前是 1234 ---
+    // --- 目前密碼是 1234 ---
     if ($password === '1234') {
-        $_SESSION['is_admin'] = true; // 關鍵！在 Session 記住身分
+        $_SESSION['is_admin'] = true; // 在 Session 記住身分
         header("Location: index.php"); // 跳轉回後台首頁
         exit();
     } else {

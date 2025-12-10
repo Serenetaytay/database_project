@@ -7,7 +7,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 include 'db_connect.php'; 
 
-// --- 1. 圖表資料：平均價格 (Bar Chart) ---
+// --- 圖表資料：平均價格 (Bar Chart) ---
 $bar_sql = "SELECT B.bName, ROUND(AVG(P.petprice)) as avg_price 
             FROM PET P 
             JOIN BREED B ON P.bID = B.bID 
@@ -22,7 +22,7 @@ while($row = $bar_res->fetch_assoc()){
     $bar_data[] = $row['avg_price'];
 }
 
-// --- 2. 圖表資料：分店商品數量 (Pie Chart) ---
+// --- 圖表資料：分店商品數量 (Pie Chart) ---
 // 查詢每個分店有多少「種」商品 (COUNT pID)
 $pie_sql = "SELECT S.storeName, COUNT(P.pID) as p_count 
             FROM STORE S 
@@ -241,7 +241,7 @@ $json_pie_data   = json_encode($pie_data);
                 labels: pieLabels,
                 datasets: [{
                     data: pieData,
-                    // 設定三個分店的顏色 (如果不夠會自動循環，也可以多加幾個)
+                    // 設定分店的顏色 (如果不夠會自動循環)
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.7)', // 紅
                         'rgba(255, 205, 86, 0.7)', // 黃

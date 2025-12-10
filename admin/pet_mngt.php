@@ -101,7 +101,7 @@ if (isset($_POST['save_pet'])) {
             $stmt->bind_param("iiissssssi", $manualID, $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath, $originalID);
             $msg = "修改成功！ID 已更新為 $manualID";
         } else {
-            // Insert (先檢查 ID 是否重複)
+            // Insert
             $check = $conn->query("SELECT petID FROM PET WHERE petID = $manualID");
             if ($check->num_rows > 0) {
                 throw new Exception("Duplicate entry '{$manualID}' for key 'PRIMARY'");
