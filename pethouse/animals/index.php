@@ -5,7 +5,7 @@
 <body class="bg-light">
     <?php include '../nav_client.php'; ?>
     <div class="container">
-        <h3>  所有寵物</h3>
+        <h3 class="fw-bold">所有寵物</h3>
         <div class="row">
             <?php
             $res = $conn->query("SELECT PET.*, BREED.bName, STORE.storeName FROM PET JOIN BREED ON PET.bID=BREED.bID JOIN STORE ON PET.storeID=STORE.storeID WHERE status='在店'");

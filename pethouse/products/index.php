@@ -8,7 +8,7 @@
 <body class="bg-light">
     <?php include '../nav_client.php'; ?>
     <div class="container">
-        <h3> 商品列表</h3>
+        <h3 class="fw-bold">商品列表</h3>
         <div class="row">
             <?php
             $res = $conn->query("SELECT * FROM PRODUCT");
@@ -17,7 +17,7 @@
                
                 if (isset($row['pImage']) && !empty($row['pImage'])) {
                    
-                    $img = "../" . $row['pImage'];
+                    $img = "../../uploads/" . $row['pImage'];
                 } else {
                     $img = "https://via.placeholder.com/300?text=No+Image";
                 }

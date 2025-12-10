@@ -46,7 +46,7 @@ if (isset($_POST['submit'])) {
             <h3 class="fw-bold mb-4"> 預約取貨單</h3>
             
             <div class="d-flex align-items-center mb-4 p-3 bg-white border rounded">
-                <img src="<?php echo !empty($product['pImage']) ? '../../'.$product['pImage'] : 'https://via.placeholder.com/100'; ?>" 
+                <img src="<?php echo !empty($product['pImage']) ? '../../uploads/'.$product['pImage'] : 'https://via.placeholder.com/100'; ?>" 
                      style="width: 70px; height: 70px; object-fit: cover; margin-right: 15px; border-radius: 5px;">
                 <div>
                     <h5 class="mb-0 fw-bold"><?php echo $product['pName']; ?></h5>

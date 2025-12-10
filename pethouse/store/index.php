@@ -14,24 +14,20 @@ include '../db_connect.php';
 
     <?php include '../nav_client.php'; ?>
 
-    <div class="container py-5">
+    <div class="container">
         <div class="mb-5">
-            <h2 class="fw-bold">店家資訊</h2>
+            <h3 class="fw-bold">店家資訊</h3>
             <p class="text-muted">找到離您最近的門市服務據點。</p>
         </div>
 
         <div class="row">
             <div class="col-lg-10 mx-auto"> <?php
-                // 查詢資料庫中的 STORE 表格
                 $sql = "SELECT * FROM STORE";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
-                        // 圖片路徑處理：
-                        // 如果資料庫有圖片，路徑前面加 ../ (因為圖片通常存在 uploads/)
-                        // 如果沒圖片，顯示灰色的預設圖
-                        $img = !empty($row['storeImage']) ? "../".$row['storeImage'] : "https://via.placeholder.com/400x300?text=No+Image";
+                        $img = !empty($row['storeImage']) ? "../../uploads/".$row['storeImage'] : "https://via.placeholder.com/400x300?text=No+Image";
                         
                         echo '
                         <div class="card mb-4 border-0 shadow-sm overflow-hidden">

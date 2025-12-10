@@ -14,8 +14,8 @@
     <div class="container py-4">
         <div class="p-5 mb-4 bg-light rounded-3 text-center">
             <div class="container-fluid py-5">
-                <h1 class="display-5 fw-bold text-black">寵物購買！</h1>
-                <p class="col-md-8 fs-4 mx-auto text-secondary">選擇附近的店家開始預約。</p>
+                <h1 class="display-5 fw-bold text-black">這一刻的凝視，是承諾一輩子的守護！</h1>
+                <p class="col-md-8 fs-4 mx-auto text-secondary">每一隻毛孩，都是我們捧在手心的寶貝，只為遇見懂愛的你。</p>
                 <a href="animals/index.php" class="btn btn-dark btn-lg px-5 mt-3">開始預約</a>
             </div>
         </div>
