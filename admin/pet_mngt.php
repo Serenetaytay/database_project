@@ -179,7 +179,7 @@ if (isset($_POST['save_pet'])) {
             $sql = "UPDATE PET SET petID=?, bID=?, storeID=?, birth=?, sex=?, personality=?, status=?, petprice=?, petImage=? WHERE petID=?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iiissssssi", $manualID, $bID, $storeID, $birth, $sex, $personality, $status, $petprice, $imagePath, $originalID);
-            $msg = "修改成功！ID 已更新為 $manualID";
+            $msg = "修改成功！";
         } else {
             // Insert
             $check = $conn->query("SELECT petID FROM PET WHERE petID = $manualID");
