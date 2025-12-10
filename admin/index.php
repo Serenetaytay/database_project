@@ -133,12 +133,19 @@ $json_pie_data   = json_encode($pie_data);
                         <h5 class="card-title mb-4"><i class="fas fa-crown me-2"></i>鎮店之寶</h5>
                         <?php
                         $sql_max = "SELECT MAX(petprice) as max_price FROM PET WHERE status='在店'";
-                        $res_max = $conn->query($sql_max)->fetch_assoc();
-                        $max_price = $res_max['max_price'] ? $res['max_price'] : 0;
+                        $query_max = $conn->query($sql_max);
+                        $max_price = 0;
+                        if ($query_max && $query_max->num_rows > 0) {
+                            $res_max = $query_max->fetch_assoc();
+                            if ($res_max['max_price'] !== null) {
+                                $max_price = $res_max['max_price'];
+                            }
+                        }
                         
                         $info_html = "目前無在店寵物";
 
                         if ($max_price > 0) {
+                            // 2. 再找出所有「價格等於最高價」的寵物
                             $sql_list = "SELECT P.petID, P.storeID, B.bName 
                                          FROM PET P 
                                          LEFT JOIN BREED B ON P.bID = B.bID 
@@ -148,10 +155,13 @@ $json_pie_data   = json_encode($pie_data);
                             $pets = [];
                             if ($res_list && $res_list->num_rows > 0) {
                                 while ($row = $res_list->fetch_assoc()) {
+                                    // 格式化 ID：分店ID - 補零後的寵物ID
                                     $visualID = $row['storeID'] . "-" . str_pad($row['petID'], 3, '0', STR_PAD_LEFT);
                                     
+                                    // 顯示格式： 1-004 德文貓
                                     $pets[] = "<span class='badge bg-primary text-white me-1'>{$visualID}</span>{$row['bName']}";
                                 }
+                                // 用 <div class='mb-1'> 換行
                                 $info_html = implode("<div class='mb-1'></div>", $pets);
                             }
                         }
