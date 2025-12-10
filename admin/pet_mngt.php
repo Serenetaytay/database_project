@@ -10,14 +10,30 @@ include 'db_connect.php';
 // 新增物種
 if (isset($_POST['add_specie'])) {
     $sName = $_POST['sName'];
-    if (!empty($sName)) {
-        $stmt = $conn->prepare("INSERT INTO SPECIE (sName) VALUES (?)");
-        $stmt->bind_param("s", $sName);
-        if ($stmt->execute()) {
-            echo "<script>alert('物種新增成功！'); window.location.href='pet_mngt.php';</script>";
-        } else {
-            echo "<script>alert('新增失敗: " . $conn->error . "');</script>";
-        }
+    if ($stmt->execute()) {
+        // ★ 修改：SweetAlert2 成功提示
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: '物種新增成功！',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href='pet_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
+        exit;
+    } else {
+        echo "<script>alert('新增失敗: " . $conn->error . "');</script>";
     }
 }
 
@@ -26,9 +42,31 @@ if (isset($_GET['del_specie'])) {
     $id = intval($_GET['del_specie']);
     $sql = "DELETE FROM SPECIE WHERE sID = $id";
     if ($conn->query($sql)) {
-        echo "<script>alert('物種刪除成功！'); window.location.href='pet_mngt.php';</script>";
+        // ★ 修改：刪除成功直接跳轉 (與其他頁面一致)
+        header("Location: pet_mngt.php");
+        exit;
     } else {
-        echo "<script>alert('刪除失敗！\\n可能原因：該物種下還有品種資料，請先清空品種。'); window.location.href='pet_mngt.php';</script>";
+        // ★ 修改：刪除失敗提示
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: '刪除失敗',
+                    text: '可能原因：該物種下還有品種資料，請先清空品種。',
+                    confirmButtonText: '確定'
+                }).then(() => {
+                    window.location.href='pet_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
+        exit;
     }
 }
 
@@ -40,7 +78,27 @@ if (isset($_POST['add_breed'])) {
         $stmt = $conn->prepare("INSERT INTO BREED (sID, bName) VALUES (?, ?)");
         $stmt->bind_param("is", $sID, $bName);
         if ($stmt->execute()) {
-            echo "<script>alert('品種新增成功！'); window.location.href='pet_mngt.php';</script>";
+            // ★ 修改：SweetAlert2 成功提示
+            echo "<!DOCTYPE html>
+            <html lang='zh-TW'>
+            <head>
+                <meta charset='UTF-8'>
+                <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            </head>
+            <body>
+                <script>
+                    Swal.fire({
+                        icon: 'success',
+                        title: '品種新增成功！',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href='pet_mngt.php';
+                    });
+                </script>
+            </body>
+            </html>";
+            exit;
         }
     }
 }
@@ -50,9 +108,31 @@ if (isset($_GET['del_breed'])) {
     $id = intval($_GET['del_breed']);
     $sql = "DELETE FROM BREED WHERE bID = $id";
     if ($conn->query($sql)) {
-        echo "<script>alert('品種刪除成功！'); window.location.href='pet_mngt.php';</script>";
+        // ★ 修改：刪除成功直接跳轉
+        header("Location: pet_mngt.php");
+        exit;
     } else {
-        echo "<script>alert('刪除失敗！\\n可能原因：還有寵物屬於此品種，請先刪除寵物或修改其品種。'); window.location.href='pet_mngt.php';</script>";
+        // ★ 修改：刪除失敗提示
+        echo "<!DOCTYPE html>
+        <html lang='zh-TW'>
+        <head>
+            <meta charset='UTF-8'>
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: '刪除失敗',
+                    text: '可能原因：還有寵物屬於此品種，請先刪除寵物或修改其品種。',
+                    confirmButtonText: '確定'
+                }).then(() => {
+                    window.location.href='pet_mngt.php';
+                });
+            </script>
+        </body>
+        </html>";
+        exit;
     }
 }
 // 編輯模式

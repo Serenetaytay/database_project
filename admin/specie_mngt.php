@@ -29,7 +29,7 @@ if (isset($_GET['del'])) {
 </head>
 <body class="container mt-5">
     <a href="index.php" class="btn btn-secondary mb-3">回首頁</a>
-    <h2 class="mb-4">1. 物種管理 (Specie)</h2>
+    <h2 class="mb-4">物種管理</h2>
 
     <form method="post" class="card p-4 mb-4 bg-light">
         <div class="row g-3 align-items-center">
