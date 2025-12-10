@@ -21,8 +21,6 @@
                 } else {
                     $img = "https://via.placeholder.com/300?text=No+Image";
                 }
-                // --- 修改重點結束 ---
-                
                 echo "<div class='col-md-3 mb-4'>
                         <div class='card border-0 shadow-sm'>
                             <img src='$img' class='card-img-top' style='height:200px;object-fit:cover;'>

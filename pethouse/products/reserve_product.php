@@ -1,5 +1,4 @@
 <?php
-// 路徑修正：往上一層找 db_connect.php
 include '../db_connect.php';
 
 $id = $_GET['id'];
