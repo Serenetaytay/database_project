@@ -29,7 +29,13 @@ if ($result->num_rows > 0) {
     exit;
 }
 $dbImage = $pet['petImage'];
-$imgSrc = !empty($dbImage) ? '../../'.htmlspecialchars($dbImage) : 'https://via.placeholder.com/500?text=No+Image';
+
+if (!empty($dbImage)) {
+    $filename = basename($dbImage);
+    $imgSrc = '../../uploads/' . $filename;
+} else {
+    $imgSrc = 'https://via.placeholder.com/500?text=No+Image';
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
