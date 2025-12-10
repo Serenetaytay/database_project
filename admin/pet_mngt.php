@@ -163,7 +163,7 @@ if (isset($_POST['save_pet'])) {
     $imagePath = $_POST['old_image'] ?? '';
 
     if (isset($_FILES['petImage']) && $_FILES['petImage']['error'] === 0) {
-        $uploadDir = 'uploads/';
+        $uploadDir = '../uploads/';
         if (!is_dir($uploadDir)) { mkdir($uploadDir, 0777, true); }
         $ext = pathinfo($_FILES['petImage']['name'], PATHINFO_EXTENSION);
         $fileName = time() . '_' . uniqid() . '.' . $ext;

@@ -18,6 +18,11 @@ if (isset($_POST['submit'])) {
                 <div class="mb-3"><label>電話</label><input type="text" name="rPhone" class="form-control" required></div>
                 <div class="mb-3"><label>取寵物時間</label><input type="datetime-local" name="time" class="form-control" required></div>
                 <button type="submit" name="submit" class="btn btn-danger w-100">送出申請</button>
+                <div class="d-grid gap-2">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                    返回上一頁
+                </a>
+            </div>
             </form>
         </div>
     </div>
