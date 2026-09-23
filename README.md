@@ -29,14 +29,19 @@
 
 
 主頁
+
 <img width="2848" height="1302" alt="image" src="https://github.com/user-attachments/assets/5687ac66-4edf-4a30-ba0d-f87f2d599686" />
+
 <img width="2850" height="1442" alt="image" src="https://github.com/user-attachments/assets/273f82f6-4329-456b-9432-4eb94e57a3dd" />
 
 逛逛寵物區
+
 <img width="2848" height="1438" alt="image" src="https://github.com/user-attachments/assets/f054d77c-55ef-458f-b076-4c7cdfd04cb2" />
 
 逛逛商品區
+
 <img width="2848" height="1440" alt="image" src="https://github.com/user-attachments/assets/aa379822-1e85-4d18-ab64-7c73a61f3865" />
 
 店家資訊
+
 <img width="2852" height="1438" alt="image" src="https://github.com/user-attachments/assets/ea110a3e-666a-42f9-9c9a-1c8a41c8ce83" />
